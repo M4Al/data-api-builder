@@ -15,6 +15,7 @@ using Azure.DataApiBuilder.Service.GraphQLBuilder.Queries;
 using HotChocolate.Execution;
 using HotChocolate.Language;
 using HotChocolate.Resolvers;
+using HotChocolate.Types.Descriptors.Definitions;
 using HotChocolate.Types.NodaTime;
 using NodaTime.Text;
 
@@ -350,6 +351,16 @@ namespace Azure.DataApiBuilder.Service.Services
             // Fill the parameters dictionary with the default argument values
             IFieldCollection<IInputField> schemaArguments = schema.Arguments;
 
+            // CNEXT: This is a nasty exernal dependancy
+            // Add one extra allowable parameter to schemaArgument: offset
+
+            InputFieldDefinition offsetDef = new("offset", "Offset for the query", null, null, null);
+            IInputField offS = new InputField(offsetDef, 5);
+
+            IEnumerable<IInputField> ss = schemaArguments.Append<IInputField>(offS);
+
+            //IInputField i = new InputField("offset", new IntType())
+
             // Example 'argumentSchemas' IInputField objects of type 'HotChocolate.Types.Argument':
             // These are all default arguments defined in the schema for queries.
             // {first:int}
@@ -358,7 +369,7 @@ namespace Azure.DataApiBuilder.Service.Services
             // {orderBy:entityOrderByInput}
             // The values in schemaArguments will have default values when the backing
             // entity is a stored procedure with runtime config defined default parameter values.
-            foreach (IInputField argument in schemaArguments)
+            foreach (IInputField argument in ss)
             {
                 if (argument.DefaultValue != null)
                 {

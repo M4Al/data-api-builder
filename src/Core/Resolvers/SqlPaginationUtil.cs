@@ -97,6 +97,15 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     // use rootEnumerated to make the *Connection.items since the last element of rootEnumerated
                     // is removed if the result has an extra element
                     connection.Add(QueryBuilder.PAGINATION_FIELD_NAME, JsonSerializer.Serialize(rootEnumerated.ToArray()));
+                    if (int.TryParse(root[0].GetProperty("RecordCount").ToString(), out int recordCount))
+                    {
+                        connection.Add(QueryBuilder.TOTAL_COUNT_FIELD_NAME, recordCount);
+                    }
+                    else
+                    {
+                        // Handle the case where parsing fails, if necessary
+                        connection.Add(QueryBuilder.TOTAL_COUNT_FIELD_NAME, 0); // or some default value
+                    }
                 }
                 else
                 {
@@ -126,6 +135,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 }
             }
 
+            
             return connection;
         }
 

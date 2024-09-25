@@ -17,6 +17,8 @@ public class PaginationMetadata : IMetadata
     /// <summary>
     public bool IsPaginated { get; set; } = DEFAULT_PAGINATION_FLAGS_VALUE;
 
+    public int TotalCount { get; set; }
+
     /// <summary>
     /// Shows if <c>items</c> is requested from the pagination result
     /// </summary>

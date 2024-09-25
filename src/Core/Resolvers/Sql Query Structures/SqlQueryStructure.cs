@@ -825,6 +825,11 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             }
         }
 
+        public uint? Offset()
+        {
+            return this._ctx?.ArgumentValue<uint?>("offset");
+        }
+
         /// <summary>
         /// Create a list of orderBy columns from the orderBy argument
         /// passed to the gql query. The orderBy argument could contain mapped field names

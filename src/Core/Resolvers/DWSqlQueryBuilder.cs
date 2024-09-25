@@ -98,11 +98,12 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             string columns = WrappedColumns(structure);
             string orderBy = $" ORDER BY {Build(structure.OrderByColumns)}";
 
-            string query = $"SELECT TOP {structure.Limit()} {columns}"
+            string query = $"SELECT {columns}"
                 + $" FROM {fromSql}"
                 + $" {subQuery}"
                 + $" WHERE {predicates}"
-                + orderBy;
+                + orderBy
+                + $" OFFSET {structure.Offset()} ROWS FETCH NEXT {structure.Limit()} ROWS ONLY";
             return query;
         }
 

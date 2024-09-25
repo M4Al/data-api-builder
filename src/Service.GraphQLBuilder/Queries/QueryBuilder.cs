@@ -24,6 +24,8 @@ namespace Azure.DataApiBuilder.Service.GraphQLBuilder.Queries
         public const string ORDER_BY_FIELD_NAME = "orderBy";
         public const string PARTITION_KEY_FIELD_NAME = "_partitionKeyValue";
         public const string ID_FIELD_NAME = "id";
+        public const string TOTAL_COUNT_FIELD_NAME = "totalCount";
+        public const string OFFSET_FIELD_NAME = "offset";
 
         /// <summary>
         /// Creates a DocumentNode containing FieldDefinitionNodes representing the FindByPK and FindAll queries
@@ -189,6 +191,8 @@ namespace Azure.DataApiBuilder.Service.GraphQLBuilder.Queries
                 new(location: null, new NameNode(PAGINATION_TOKEN_ARGUMENT_NAME), new StringValueNode("A pagination token from a previous query to continue through a paginated list"), new StringType().ToTypeNode(), defaultValue: null, new List<DirectiveNode>()),
                 new(location: null, new NameNode(FILTER_FIELD_NAME), new StringValueNode("Filter options for query"), new NamedTypeNode(filterInputName), defaultValue: null, new List<DirectiveNode>()),
                 new(location: null, new NameNode(ORDER_BY_FIELD_NAME), new StringValueNode("Ordering options for query"), new NamedTypeNode(orderByInputName), defaultValue: null, new List<DirectiveNode>()),
+                new(location: null, new NameNode(OFFSET_FIELD_NAME), new StringValueNode("Partition key value for the query"), new IntType().ToTypeNode(), defaultValue: null, new List<DirectiveNode>()),
+
             };
         }
 
@@ -268,6 +272,13 @@ namespace Azure.DataApiBuilder.Service.GraphQLBuilder.Queries
                         new StringValueNode("Indicates if there are more pages of items to return"),
                         new List<InputValueDefinitionNode>(),
                         new NonNullType(new BooleanType()).ToTypeNode(),
+                        new List<DirectiveNode>()),
+                    new(
+                        location: null,
+                        new NameNode(TOTAL_COUNT_FIELD_NAME),
+                        new StringValueNode("The total number of items that matched the filter"),
+                        new List<InputValueDefinitionNode>(),
+                        new NonNullType(new IntType()).ToTypeNode(),
                         new List<DirectiveNode>())
                 }
             );
