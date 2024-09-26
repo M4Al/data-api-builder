@@ -34,6 +34,8 @@ public class PaginationMetadata : IMetadata
     /// </summary>
     public bool RequestedHasNextPage { get; set; } = DEFAULT_PAGINATION_FLAGS_VALUE;
 
+    public bool RequestedTotalCount { get; set; } = DEFAULT_PAGINATION_FLAGS_VALUE;
+
     /// <summary>
     /// Keeps a reference to the SqlQueryStructure the pagination metadata is associated with
     /// </summary>

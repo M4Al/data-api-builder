@@ -670,6 +670,10 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     case QueryBuilder.HAS_NEXT_PAGE_FIELD_NAME:
                         PaginationMetadata.RequestedHasNextPage = true;
                         break;
+                    case QueryBuilder.TOTAL_COUNT_FIELD_NAME:
+                        PaginationMetadata.RequestedTotalCount = true;
+                        break;
+
                 }
             }
         }

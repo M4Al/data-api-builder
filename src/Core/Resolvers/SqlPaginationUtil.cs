@@ -66,6 +66,21 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             // values we need to determine the correct pagination logic
             bool isPaginationRequested = paginationMetadata.RequestedHasNextPage || paginationMetadata.RequestedEndCursor;
 
+            // Id the request Includes a totalCount, make sure we always add it to the connection
+
+            if (paginationMetadata.RequestedTotalCount)
+            {
+                if (root.GetArrayLength() > 0 && int.TryParse(root[0].GetProperty("RecordCount").ToString(), out int recordCount))
+                {
+                    connection.Add(QueryBuilder.TOTAL_COUNT_FIELD_NAME, recordCount);
+                }
+                else
+                {
+                    // Handle the case where parsing fails, if necessary
+                    connection.Add(QueryBuilder.TOTAL_COUNT_FIELD_NAME, 0); // or some default value
+                }
+            }
+
             IEnumerable<JsonElement> rootEnumerated = root.EnumerateArray();
             int returnedElementCount = rootEnumerated.Count();
             bool hasExtraElement = false;
@@ -97,15 +112,6 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     // use rootEnumerated to make the *Connection.items since the last element of rootEnumerated
                     // is removed if the result has an extra element
                     connection.Add(QueryBuilder.PAGINATION_FIELD_NAME, JsonSerializer.Serialize(rootEnumerated.ToArray()));
-                    if (int.TryParse(root[0].GetProperty("RecordCount").ToString(), out int recordCount))
-                    {
-                        connection.Add(QueryBuilder.TOTAL_COUNT_FIELD_NAME, recordCount);
-                    }
-                    else
-                    {
-                        // Handle the case where parsing fails, if necessary
-                        connection.Add(QueryBuilder.TOTAL_COUNT_FIELD_NAME, 0); // or some default value
-                    }
                 }
                 else
                 {
@@ -134,7 +140,6 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                             paginationMetadata.Structure!.MetadataProvider));
                 }
             }
-
             
             return connection;
         }
