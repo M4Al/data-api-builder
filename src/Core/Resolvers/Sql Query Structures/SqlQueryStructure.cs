@@ -827,7 +827,8 @@ namespace Azure.DataApiBuilder.Core.Resolvers
 
         public uint? Offset()
         {
-            return this._ctx?.ArgumentValue<uint?>("offset");
+            // Check if the offset argument is present in the query, if not, return 0
+            return this._ctx?.ArgumentValue<uint?>("offset") ?? 0;
         }
 
         /// <summary>

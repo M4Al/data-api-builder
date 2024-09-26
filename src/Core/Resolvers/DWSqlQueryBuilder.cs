@@ -50,8 +50,11 @@ namespace Azure.DataApiBuilder.Core.Resolvers
 
             string countSql = $" CROSS JOIN ( {BuildSqlCountQuery(structure)} ) {subQueryAlias}";
 
-            //Add a new column to the structure
-            structure.Columns.Add(new LabelledColumn("", subQueryAlias, "RecordCount", "RecordCount", subQueryAlias));
+            //Add a new column to the structure if not already there
+            if (!structure.Columns.Exists(c => c.ColumnName == "RecordCount"))
+            {
+                structure.Columns.Add(new LabelledColumn("", subQueryAlias, "RecordCount", "RecordCount", subQueryAlias));
+            }
 
             //Add a subquery 'a' ti the structure
             structure.JoinQueries.Add(subQueryAlias, structure);  
