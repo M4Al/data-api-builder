@@ -18,7 +18,7 @@ public record PaginationOptions
     /// <summary>
     /// Default page size.
     /// </summary>
-    public const uint DEFAULT_PAGE_SIZE = 100;
+    public const uint DEFAULT_PAGE_SIZE = 1000;
 
     /// <summary>
     /// Max page size.
