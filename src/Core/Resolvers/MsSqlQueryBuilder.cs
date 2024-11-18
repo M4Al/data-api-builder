@@ -61,10 +61,20 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                                     Build(structure.PaginationMetadata.PaginationPredicate));
             }
 
-            string query = $"SELECT TOP {structure.Limit()} {WrappedColumns(structure)}"
+            //Add recordcount
+            string recordCountSql = $"SELECT cast(count(1) as int) as RecordCount "
+                + $" FROM {fromSql}"
+                + $" WHERE {predicates}";
+
+            string orderBy = $" ORDER BY {Build(structure.OrderByColumns)}";
+
+            fromSql += $" OUTER APPLY ({recordCountSql}) RecordCountQuery";
+
+            string query = $"SELECT {WrappedColumns(structure)}, RecordCountQuery.RecordCount"
                 + $" FROM {fromSql}"
                 + $" WHERE {predicates}"
-                + $" ORDER BY {Build(structure.OrderByColumns)}";
+                + orderBy
+                + $" OFFSET {structure.Offset()} ROWS FETCH NEXT {structure.Limit()} ROWS ONLY";
 
             query += FOR_JSON_SUFFIX;
             if (!structure.IsListQuery)
