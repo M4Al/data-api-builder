@@ -325,9 +325,19 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 {
                     DatabaseQueryMetadata queryMetadata = new(queryText: queryString, dataSource: dataSourceName, queryParameters: structure.Parameters);
                     JsonElement result = await _cache.GetOrSetAsync<JsonElement>(queryExecutor, queryMetadata, cacheEntryTtl: runtimeConfig.GetEntityCacheEntryTtl(entityName: structure.EntityName));
-                    byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(result);
-                    JsonDocument cacheServiceResponse = JsonDocument.Parse(jsonBytes);
-                    return cacheServiceResponse;
+                    // If there is an empty result cached, then the returned value from the cache service is some bizarre
+                    // undefined value that is unparsable
+                    try
+                    {
+                        byte[] jsonBytes = JsonSerializer.SerializeToUtf8Bytes(result);
+                        JsonDocument cacheServiceResponse = JsonDocument.Parse(jsonBytes);
+                        return cacheServiceResponse;
+                    }
+                    catch(InvalidOperationException)
+                    {
+                        return null;
+                    }
+                    
                 }
             }
 
