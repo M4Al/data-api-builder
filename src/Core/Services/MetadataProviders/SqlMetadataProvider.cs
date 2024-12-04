@@ -101,6 +101,16 @@ namespace Azure.DataApiBuilder.Core.Services
             }
         }
 
+        public bool TryGetEntityDefenition(string entityName, out Entity? entityDefenition)
+        {
+            if (!_entities.TryGetValue(entityName, out entityDefenition))
+            {
+                throw new KeyNotFoundException($"Initialization of metadata incomplete for entity: {entityName}");
+            }
+
+            return true;
+        }
+
         public SqlMetadataProvider(
             RuntimeConfigProvider runtimeConfigProvider,
             IAbstractQueryManagerFactory engineFactory,

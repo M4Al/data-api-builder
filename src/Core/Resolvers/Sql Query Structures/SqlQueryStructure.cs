@@ -3,6 +3,7 @@
 
 using System.Data;
 using System.Net;
+using System.Text.RegularExpressions;
 using Azure.DataApiBuilder.Auth;
 using Azure.DataApiBuilder.Config.ObjectModel;
 using Azure.DataApiBuilder.Core.Configurations;
@@ -835,6 +836,21 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             return this._ctx?.ArgumentValue<uint?>("offset") ?? 0;
         }
 
+        private static string ExtractColumnName(string fieldValue)
+        {
+            string pattern = @"\{\s*([^:]+)\s*:";
+            Match match = Regex.Match(fieldValue, pattern);
+            if (match.Success)
+            {
+                string columnName = match.Groups[1].Value.Trim();
+                return columnName;
+            }
+            else
+            {
+                return "";
+            }
+        }
+
         /// <summary>
         /// Create a list of orderBy columns from the orderBy argument
         /// passed to the gql query. The orderBy argument could contain mapped field names
@@ -871,6 +887,36 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 }
 
                 string fieldName = field.Name.ToString();
+
+                // Let's check if we're trying to sort on a child object. If tgis is a 'one' relationship this will just work
+                if (field.Value.ToString().Contains(':'))
+                {
+                    // Check if the fieldName is a relationship element
+                    if (MetadataProvider.TryGetEntityDefenition(EntityName, out Entity? baseEntity))
+                    {
+                        if (baseEntity!.Relationships!.ContainsKey(fieldName))
+                        {
+                            // Look up out alias in the JoinQueries
+                            //myJoin = this.JoinQueries;
+                            //stuff
+                            Column? linkColumn = FindColumnByLabel(fieldName);
+                            if (linkColumn == null)
+                            {
+                                throw new DataApiBuilderException(message: "Unable to resolve relation " + fieldName,
+                                    statusCode: HttpStatusCode.InternalServerError,
+                                    subStatusCode: DataApiBuilderException.SubStatusCodes.UnexpectedError);
+                            }
+
+                            orderByColumnsList.Add(new OrderByColumn(tableSchema: linkColumn.TableSchema,
+                                                         tableName: linkColumn.TableName,
+                                                         columnName: ExtractColumnName(field.Value.ToString()),
+                                                         tableAlias: linkColumn.TableAlias));
+
+                        }
+                    }
+
+                    continue;
+                }
 
                 if (!MetadataProvider.TryGetBackingColumn(EntityName, fieldName, out string? backingColumnName))
                 {
@@ -971,6 +1017,11 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         public bool IsSubqueryColumn(Column column)
         {
             return column.TableAlias == null ? false : JoinQueries.ContainsKey(column.TableAlias);
+        }
+
+        public LabelledColumn? FindColumnByLabel(string fieldName)
+        {
+            return Columns.FirstOrDefault(column => column.Label.Equals(fieldName, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>

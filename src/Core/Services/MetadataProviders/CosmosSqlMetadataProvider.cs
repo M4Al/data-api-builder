@@ -621,5 +621,10 @@ namespace Azure.DataApiBuilder.Core.Services.MetadataProviders
         {
             throw new NotImplementedException();
         }
+
+        public bool TryGetEntityDefenition(string entityName, out Entity? entityDefenition)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
