@@ -33,6 +33,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         /// <inheritdoc />
         public string Build(SqlQueryStructure structure)
         {
+            string query;
             string dataIdent = QuoteIdentifier(SqlQueryStructure.DATA_IDENT);
             string fromSql = $"{QuoteIdentifier(structure.DatabaseObject.SchemaName)}.{QuoteIdentifier(structure.DatabaseObject.Name)} " +
                              $"AS {QuoteIdentifier($"{structure.SourceAlias}")}{Build(structure.Joins)}";
@@ -61,20 +62,26 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                                     Build(structure.PaginationMetadata.PaginationPredicate));
             }
 
-            //Add recordcount
-            string recordCountSql = $"SELECT cast(count(1) as int) as RecordCount "
-                + $" FROM {fromSql}"
-                + $" WHERE {predicates}";
-
             string orderBy = $" ORDER BY {Build(structure.OrderByColumns)}";
 
-            fromSql += $" OUTER APPLY ({recordCountSql}) RecordCountQuery";
-
-            string query = $"SELECT {WrappedColumns(structure)}, RecordCountQuery.RecordCount"
-                + $" FROM {fromSql}"
-                + $" WHERE {predicates}"
-                + orderBy
-                + $" OFFSET {structure.Offset()} ROWS FETCH NEXT {structure.Limit()} ROWS ONLY";
+            //Add recordcount if needed
+            if (structure.IsListQuery)
+            {
+                string recordCountSql = $"SELECT cast(count(1) as int) as RecordCount "
+                    + $" FROM {fromSql}"
+                    + $" WHERE {predicates}";
+                fromSql += $" OUTER APPLY ({recordCountSql}) RecordCountQuery";
+                query = $"SELECT {WrappedColumns(structure)}, RecordCountQuery.RecordCount"
+                    + $" FROM {fromSql}"
+                    + $" WHERE {predicates}"
+                    + orderBy
+                    + $" OFFSET {structure.Offset()} ROWS FETCH NEXT {structure.Limit()} ROWS ONLY";
+            } else
+            {
+                query = $"SELECT {WrappedColumns(structure)}"
+                    + $" FROM {fromSql}"
+                    + $" WHERE {predicates}";
+            }
 
             query += FOR_JSON_SUFFIX;
             if (!structure.IsListQuery)
