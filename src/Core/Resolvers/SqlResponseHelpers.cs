@@ -121,7 +121,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                                   after);
 
             //Get the element RecordCount from the first element of the array
-            JsonElement recordCountElement = rootEnumerated[0].GetProperty("RecordCount");
+            //JsonElement recordCountElement = rootEnumerated[0].GetProperty("RecordCount");
             string jsonRecordCount = JsonSerializer.Serialize(new[]
             {
                 new
