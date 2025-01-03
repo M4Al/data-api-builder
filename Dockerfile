@@ -10,6 +10,7 @@ RUN dotnet build "./src/Service/Azure.DataApiBuilder.Service.csproj" -f net8.0 -
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
 COPY --from=build /out /App
+
 WORKDIR /App
 ENV ASPNETCORE_URLS=http://+:5000
 ENTRYPOINT ["dotnet", "Azure.DataApiBuilder.Service.dll"]
