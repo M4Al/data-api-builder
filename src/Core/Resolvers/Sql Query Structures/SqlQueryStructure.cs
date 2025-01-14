@@ -833,7 +833,14 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         public uint? Offset()
         {
             // Check if the offset argument is present in the query, if not, return 0
-            return this._ctx?.ArgumentValue<uint?>("offset") ?? 0;
+            try
+            {
+                return this._ctx?.ArgumentValue<uint?>("offset") ?? 0;
+            }
+            catch (HotChocolate.GraphQLException)
+            {
+                return 0; // This is a stop-gat and indicated a very fishy situation
+            }
         }
 
         private static string ExtractColumnName(string fieldValue)
