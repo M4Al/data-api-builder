@@ -858,6 +858,21 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             }
         }
 
+        private static string ExtractValue(string fieldValue)
+        {
+            string pattern = @"\{\s*([^:]+)\s*:\s*(.*?)\s*\}";
+            Match match = Regex.Match(fieldValue, pattern);
+            if (match.Success)
+            {
+                string value = match.Groups[2].Value.Trim();
+                return value;
+            }
+            else
+            {
+                return "";
+            }
+        }
+
         /// <summary>
         /// Create a list of orderBy columns from the orderBy argument
         /// passed to the gql query. The orderBy argument could contain mapped field names
@@ -917,7 +932,9 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                             orderByColumnsList.Add(new OrderByColumn(tableSchema: linkColumn.TableSchema,
                                                          tableName: linkColumn.TableName,
                                                          columnName: ExtractColumnName(field.Value.ToString()),
-                                                         tableAlias: linkColumn.TableAlias));
+                                                         tableAlias: linkColumn.TableAlias,
+                                                         direction: Enum.Parse<OrderBy>(ExtractValue(field.Value.ToString()))
+                                ));
 
                         }
                     }

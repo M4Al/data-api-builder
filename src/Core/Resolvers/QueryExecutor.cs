@@ -142,6 +142,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                         {
                             string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
                             QueryExecutorLogger.LogDebug("{correlationId} Executing query: {queryText}", correlationId, sqltext);
+                            QueryExecutorLogger.LogDebug($"Paramaters: {string.Join(", ", parameters.Select(param => $"{param.Key}: {param.Value?.Value} (DbType: {param.Value?.DbType}, SqlDbType: {param.Value?.SqlDbType})"))}");
                         }
 
                         TResult? result = ExecuteQueryAgainstDb(conn, sqltext, parameters, dataReaderHandler, httpContext, dataSourceName, args);
@@ -228,9 +229,14 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                         {
                             string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
                             QueryExecutorLogger.LogDebug("{correlationId} Executing query: {queryText}", correlationId, sqltext);
+                            
+                            if (parameters != null)
+                            {
+                                QueryExecutorLogger.LogDebug($"Parameters: {string.Join(", ", parameters.Select(param => $"{param.Key}: {param.Value?.Value} (DbType: {param.Value?.DbType}, SqlDbType: {param.Value?.SqlDbType})"))}");
+                            }
                         }
 
-                        TResult? result = await ExecuteQueryAgainstDbAsync(conn, sqltext, parameters, dataReaderHandler, httpContext, dataSourceName, args);
+                        TResult? result = await ExecuteQueryAgainstDbAsync(conn, sqltext, parameters!, dataReaderHandler, httpContext, dataSourceName, args);
 
                         if (retryAttempt > 1)
                         {
