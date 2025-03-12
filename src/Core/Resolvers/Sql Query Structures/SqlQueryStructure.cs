@@ -64,6 +64,8 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         /// </summary>
         private uint? _limit = PaginationOptions.DEFAULT_PAGE_SIZE;
 
+        private int? _offset;
+
         /// <summary>
         /// If this query is built because of a GraphQL query (as opposed to
         /// REST), then this is set to the resolver context of that query.
@@ -458,11 +460,25 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     // parse first parameter for all list queries
                     object? firstObject = queryParams[QueryBuilder.PAGE_START_ARGUMENT_NAME];
                     _limit = runtimeConfig?.GetPaginationLimit((int?)firstObject);
+
                 }
                 else
                 {
                     // if first is not passed, we should use the default page size.
                     _limit = runtimeConfig?.DefaultPageSize();
+                }
+
+                if (queryParams.ContainsKey(QueryBuilder.OFFSET_FIELD_NAME))
+                {
+                    // parse the offset parameter for all list queries
+                    object? offsetObject = queryParams[QueryBuilder.OFFSET_FIELD_NAME];
+                    _offset = (int?)offsetObject;
+
+                }
+                else
+                {
+                    // if first is not passed, we should use the default page size.
+                    _offset = 0;
                 }
             }
 
@@ -830,12 +846,13 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             }
         }
 
-        public uint? Offset()
+        public int? Offset()
         {
             // Check if the offset argument is present in the query, if not, return 0
             try
             {
-                return this._ctx?.ArgumentValue<uint?>("offset") ?? 0;
+                //return this._ctx?.ArgumentValue<uint?>("offset") ?? 0;
+                return _offset;
             }
             catch (HotChocolate.GraphQLException)
             {
