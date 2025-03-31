@@ -229,9 +229,11 @@ namespace Azure.DataApiBuilder.Core.Services
                 }
                 else
                 {
+                    Environment.Exit(-777);
                     throw new DataApiBuilderException(message: $"Database Object definition for {entityName} has not been inferred.",
                         statusCode: HttpStatusCode.InternalServerError,
                         subStatusCode: DataApiBuilderException.SubStatusCodes.ErrorInInitialization);
+                    
                 }
             }
 
