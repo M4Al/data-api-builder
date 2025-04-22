@@ -141,7 +141,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                         if (!ConfigProvider.IsLateConfigured)
                         {
                             string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
-                            QueryExecutorLogger.LogDebug("{correlationId} Executing query: {queryText}", correlationId, sqltext);
+                            QueryExecutorLogger.LogDebug("{correlationId} Executing query : {queryText}", correlationId, sqltext);
                             QueryExecutorLogger.LogDebug($"Paramaters: {string.Join(", ", parameters.Select(param => $"{param.Key}: {param.Value?.Value} (DbType: {param.Value?.DbType}, SqlDbType: {param.Value?.SqlDbType})"))}");
                         }
 
@@ -228,11 +228,19 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                         if (!ConfigProvider.IsLateConfigured)
                         {
                             string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
-                            QueryExecutorLogger.LogDebug("{correlationId} Executing query: {queryText}", correlationId, sqltext);
+                            QueryExecutorLogger.LogDebug("{correlationId} Executing query2: {queryText}", correlationId, sqltext);
                             
                             if (parameters != null)
                             {
                                 QueryExecutorLogger.LogDebug($"Parameters: {string.Join(", ", parameters.Select(param => $"{param.Key}: {param.Value?.Value} (DbType: {param.Value?.DbType}, SqlDbType: {param.Value?.SqlDbType})"))}");
+                                IEnumerable<string> paramDeclarations = parameters.Select(param =>
+                                {
+                                    string paramType = param.Value.DbType.HasValue ? param.Value.DbType.ToString()! : "varchar(255)";
+                                    string paramValue = param.Value.Value != null ? param.Value.Value.ToString()! : "NULL";
+                                    return $"declare {param.Key} {paramType} = '{paramValue}'";
+                                });
+
+                                QueryExecutorLogger.LogDebug($"Parameters2: {string.Join("; ", paramDeclarations)}");
                             }
                         }
 

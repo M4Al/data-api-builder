@@ -171,6 +171,7 @@ namespace Azure.DataApiBuilder.Core.Services
         {
             if (!EntityToDatabaseObject.TryGetValue(entityName, out DatabaseObject? databaseObject))
             {
+                Environment.Exit(-777);
                 throw new DataApiBuilderException(message: $"Table Definition for {entityName} has not been inferred.",
                     statusCode: HttpStatusCode.InternalServerError,
                     subStatusCode: DataApiBuilderException.SubStatusCodes.EntityNotFound);
@@ -189,6 +190,7 @@ namespace Azure.DataApiBuilder.Core.Services
         {
             if (!EntityToDatabaseObject.TryGetValue(entityName, out DatabaseObject? databaseObject))
             {
+                Environment.Exit(-777);
                 throw new DataApiBuilderException(message: $"Table Definition for {entityName} has not been inferred.",
                     statusCode: HttpStatusCode.InternalServerError,
                     subStatusCode: DataApiBuilderException.SubStatusCodes.EntityNotFound);
@@ -202,6 +204,7 @@ namespace Azure.DataApiBuilder.Core.Services
         {
             if (!EntityToDatabaseObject.TryGetValue(entityName, out DatabaseObject? databaseObject))
             {
+                Environment.Exit(-777);
                 throw new DataApiBuilderException(message: $"Table Definition for {entityName} has not been inferred.",
                     statusCode: HttpStatusCode.InternalServerError,
                     subStatusCode: DataApiBuilderException.SubStatusCodes.EntityNotFound);
