@@ -192,6 +192,12 @@ namespace Azure.DataApiBuilder.Service
             services.AddSingleton<IAuthorizationResolver, AuthorizationResolver>();
             services.AddSingleton<IOpenApiDocumentor, OpenApiDocumentor>();
 
+            services.AddHttpLogging(logging =>
+            {
+                logging.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestBody;
+                logging.ResponseBodyLogLimit = 9999999;
+            });
+
             AddGraphQLService(services, runtimeConfig?.Runtime?.GraphQL);
             services.AddFusionCache()
                 .WithOptions(options =>
@@ -328,6 +334,7 @@ namespace Azure.DataApiBuilder.Service
             // https://andrewlock.net/understanding-pathbase-in-aspnetcore/#placing-usepathbase-in-the-correct-location
             app.UseCorrelationIdMiddleware();
             app.UsePathRewriteMiddleware();
+            app.UseHttpLogging();
 
             // SwaggerUI visualization of the OpenAPI description document is only available
             // in developer mode in alignment with the restriction placed on ChilliCream's BananaCakePop IDE.

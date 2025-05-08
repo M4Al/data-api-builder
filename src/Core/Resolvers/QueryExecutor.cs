@@ -219,6 +219,8 @@ namespace Azure.DataApiBuilder.Core.Resolvers
 
             try
             {
+                string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
+                DateTime startTime = DateTime.Now;
                 result = await _retryPolicyAsync.ExecuteAsync(async () =>
                 {
                     retryAttempt++;
@@ -227,12 +229,11 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                         // When IsLateConfigured is true we are in a hosted scenario and do not reveal query information.
                         if (!ConfigProvider.IsLateConfigured)
                         {
-                            string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
-                            QueryExecutorLogger.LogDebug("{correlationId} Executing query2: {queryText}", correlationId, sqltext);
+                            QueryExecutorLogger.LogDebug("{correlationId} {ts} Executing query: {queryText}", correlationId, DateTime.Now.ToString() , sqltext);
                             
                             if (parameters != null)
                             {
-                                QueryExecutorLogger.LogDebug($"Parameters: {string.Join(", ", parameters.Select(param => $"{param.Key}: {param.Value?.Value} (DbType: {param.Value?.DbType}, SqlDbType: {param.Value?.SqlDbType})"))}");
+                               // QueryExecutorLogger.LogDebug($"Parameters: {string.Join(", ", parameters.Select(param => $"{param.Key}: {param.Value?.Value} (DbType: {param.Value?.DbType}, SqlDbType: {param.Value?.SqlDbType})"))}");
                                 IEnumerable<string> paramDeclarations = parameters.Select(param =>
                                 {
                                     string paramType = param.Value.DbType.HasValue ? param.Value.DbType.ToString()! : "varchar(255)";
@@ -240,7 +241,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                                     return $"declare {param.Key} {paramType} = '{paramValue}'";
                                 });
 
-                                QueryExecutorLogger.LogDebug($"Parameters2: {string.Join("; ", paramDeclarations)}");
+                                //QueryExecutorLogger.LogDebug($"Parameters2: {string.Join("; ", paramDeclarations)}");
                             }
                         }
 
@@ -253,7 +254,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                             // This implies that the request got successfully executed during one of retry attempts.
                             QueryExecutorLogger.LogInformation("{correlationId} Request executed successfully in {retryAttempt} attempt of {maxRetries} available attempts.", correlationId, retryAttempt, maxRetries);
                         }
-
+                        QueryExecutorLogger.LogDebug("{correlationId} {ts} Query executed in {time}", correlationId, DateTime.Now.ToString(), DateTime.Now - startTime);
                         return result;
                     }
                     catch (DbException e)
