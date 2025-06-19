@@ -241,9 +241,10 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                                     return $"declare {param.Key} {paramType} = '{paramValue}'";
                                 });
 
-                                //QueryExecutorLogger.LogDebug($"Parameters2: {string.Join("; ", paramDeclarations)}");
+                                QueryExecutorLogger.LogDebug($"Parameters2: {string.Join("; ", paramDeclarations).Replace("String", "varchar(255)")}");
                             }
                         }
+
 
                         TResult? result = await ExecuteQueryAgainstDbAsync(conn, sqltext, parameters!, dataReaderHandler, httpContext, dataSourceName, args);
 
@@ -485,6 +486,11 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         public async Task<DbResultSet>
             ExtractResultSetFromDbDataReaderAsync(DbDataReader dbDataReader, List<string>? args = null)
         {
+            // If the first dataset has no records, try if there is a second one ...
+            if (!dbDataReader.HasRows)
+            {
+                dbDataReader.NextResult();
+            }
             DbResultSet dbResultSet = new(resultProperties: GetResultPropertiesAsync(dbDataReader).Result ?? new());
             long availableBytes = _maxResponseSizeBytes;
             while (await ReadAsync(dbDataReader))

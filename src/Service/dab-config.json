@@ -19,7 +19,7 @@
     },
     "cache": {
       "enabled": true,
-      "ttl-seconds": 30
+      "ttl-seconds": 120
     },
     "rest": {
       "enabled": true,
@@ -43,6 +43,1824 @@
     }
   },
   "entities": {
+    "BillOfLading": {
+      "source": {
+        "object": "silver_ops.BillOfLading",
+        "type": "table",
+        "key-fields": [
+          "systemId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "BillOfLading",
+          "plural": "BillsOfLading"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "BillOfLadingPerShipmentEquipment": {
+          "cardinality": "many",
+          "target.entity": "BillOfLadingPerShipmentEquipment",
+          "source.fields": [
+            "systemId"
+          ],
+          "target.fields": [
+            "BOLId"
+          ]
+        },
+        "Shipment": {
+          "cardinality": "one",
+          "target.entity": "Shipment",
+          "source.fields": [
+            "EnvOrderNo"
+          ],
+          "target.fields": [
+            "shipmentID"
+          ]
+        },
+        "Party": {
+          "cardinality": "many",
+          "target.entity": "BillOfLadingParty",
+          "source.fields": [
+            "DocumentNo"
+          ],
+          "target.fields": [
+            "DocumentNo"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "BillOfLadingParty": {
+      "source": {
+        "object": "silver_ops.BillOfLadingParty",
+        "type": "table",
+        "key-fields": [
+          "systemId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "BillOfLadingParty",
+          "plural": "BillOfLadingParties"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "BillOfLading": {
+          "cardinality": "one",
+          "target.entity": "BillOfLading",
+          "source.fields": [
+            "DocumentNo"
+          ],
+          "target.fields": [
+            "DocumentNo"
+          ]
+        },
+        "Partner": {
+          "cardinality": "one",
+          "target.entity": "CustomerPartner",
+          "source.fields": [
+            "ContactNo"
+          ],
+          "target.fields": [
+            "partnerID"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "BillOfLadingPerShipmentEquipment": {
+      "source": {
+        "object": "silver_ops.BillOfLadingPerShipmentEquipment",
+        "type": "table",
+        "key-fields": [
+          "systemId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "BillOfLadingPerShipmentEquipment",
+          "plural": "BillOfLadingsPerShipmentEquipment"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "ShipmentEquipment": {
+          "cardinality": "one",
+          "target.entity": "ShipmentEquipment",
+          "source.fields": [
+            "shipmentEquipmentId"
+          ],
+          "target.fields": [
+            "id"
+          ]
+        },
+        "BillOfLading": {
+          "cardinality": "one",
+          "target.entity": "BillOfLading",
+          "source.fields": [
+            "BOLId"
+          ],
+          "target.fields": [
+            "systemId"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "CargoItem": {
+      "source": {
+        "object": "silver_ops.CargoItem",
+        "type": "table",
+        "key-fields": [
+          "cargoItemID"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "CargoItem",
+          "plural": "CargoItems"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "Shipment": {
+          "cardinality": "one",
+          "target.entity": "Shipment",
+          "source.fields": [
+            "shipmentId"
+          ],
+          "target.fields": [
+            "shipmentID"
+          ]
+        },
+        "ShipmentEquipment": {
+          "cardinality": "one",
+          "target.entity": "ShipmentEquipment",
+          "source.fields": [
+            "shipmentEquipmentId"
+          ],
+          "target.fields": [
+            "id"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "CargoMovementType": {
+      "source": {
+        "object": "silver_ops.CargoMovementType",
+        "type": "table"
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "CargoMovementType",
+          "plural": "CargoMovementTypes"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "CarrierPartner": {
+      "source": {
+        "object": "silver_ops.Partner",
+        "type": "table",
+        "key-fields": [
+          "partnerID"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "CarrierPartner",
+          "plural": "CarrierPartners"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "Shipments": {
+          "cardinality": "many",
+          "target.entity": "Shipment",
+          "source.fields": [
+            "partnerID"
+          ],
+          "target.fields": [
+            "carrierID"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "CharacteristicGroup": {
+      "source": {
+        "object": "silver_ops.v_Characteristics",
+        "type": "table",
+        "key-fields": [
+          "code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "CharacteristicGroup",
+          "plural": "CharacteristicGroups"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "CustomerPartner": {
+      "source": {
+        "object": "silver_ops.v_Partner",
+        "type": "table",
+        "key-fields": [
+          "partnerID"
+        ]
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 15
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "CustomerPartner",
+          "plural": "CustomerPartners"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "Organization": {
+          "cardinality": "one",
+          "target.entity": "Organization",
+          "source.fields": [
+            "mdmOrganizationEntityID"
+          ],
+          "target.fields": [
+            "mdmEntityID"
+          ]
+        },
+        "Shipment": {
+          "cardinality": "many",
+          "target.entity": "Shipment",
+          "source.fields": [
+            "partnerID"
+          ],
+          "target.fields": [
+            "customerID"
+          ]
+        },
+        "InboundStockOrder": {
+          "cardinality": "many",
+          "target.entity": "InboundOrder",
+          "source.fields": [
+            "partnerID"
+          ],
+          "target.fields": [
+            "customerCode"
+          ]
+        },
+        "OutboundStockOrder": {
+          "cardinality": "many",
+          "target.entity": "OutboundOrder",
+          "source.fields": [
+            "partnerID"
+          ],
+          "target.fields": [
+            "customerCode"
+          ]
+        },
+        "Company": {
+          "cardinality": "many",
+          "target.entity": "PartnerPerCompany",
+          "source.fields": [
+            "partnerID"
+          ],
+          "target.fields": [
+            "sourceEntityID"
+          ]
+        },
+        "TariffContactGroup": {
+          "cardinality": "many",
+          "target.entity": "TariffContactGroupMember",
+          "source.fields": [
+            "partnerID"
+          ],
+          "target.fields": [
+            "PartnerId"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "Equipment": {
+      "source": {
+        "object": "silver_ops.Equipment",
+        "type": "table",
+        "key-fields": [
+          "equipmentID"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "Equipment",
+          "plural": "Equipment"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "relationships": {
+        "ShipmentEquipments": {
+          "cardinality": "many",
+          "target.entity": "ShipmentEquipment",
+          "source.fields": [
+            "equipmentID"
+          ],
+          "target.fields": [
+            "equipmentID"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "EquipmentEventType": {
+      "source": {
+        "object": "silver_ops.EquipmentEventType",
+        "type": "table"
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "EquipmentEventType",
+          "plural": "EquipmentEventTypes"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "EquipmentMap": {
+      "source": {
+        "object": "silver_ops.usp_MapSource",
+        "type": "stored-procedure",
+        "parameters": {
+          "customerScope": "string"
+        }
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 60
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "EquipmentMap",
+          "plural": "EquipmentMaps"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "execute"
+            }
+          ]
+        }
+      ]
+    },
+    "FlowtypeType": {
+      "source": {
+        "object": "silver_ops.v_FlowTypeType",
+        "type": "table",
+        "key-fields": [
+          "flowType"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "FlowtypeType",
+          "plural": "FlowtypeTypes"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "GlobalSearch": {
+      "source": {
+        "object": "silver_ops.usp_globalSearch",
+        "type": "stored-procedure",
+        "parameters": {
+          "searchString": "string",
+          "customerScope": "string"
+        }
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "GlobalSearch",
+          "plural": "GlobalSearches"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "execute"
+            }
+          ]
+        }
+      ]
+    },
+    "GoodsSummary": {
+      "source": {
+        "object": "silver_ops.v_GoodsSummmary",
+        "type": "table",
+        "key-fields": [
+          "shipmentID"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "GoodsSummary",
+          "plural": "GoodsSummaries"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "relationships": {
+        "Shipment": {
+          "cardinality": "one",
+          "target.entity": "Shipment",
+          "source.fields": [
+            "shipmentID"
+          ],
+          "target.fields": [
+            "shipmentID"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "InboundOrder": {
+      "source": {
+        "object": "silver_ops.InboundOrder",
+        "type": "table",
+        "key-fields": [
+          "systemId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "InboundOrder",
+          "plural": "InboundOrders"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "customer": {
+          "cardinality": "one",
+          "target.entity": "CustomerPartner",
+          "source.fields": [
+            "customerCode"
+          ],
+          "target.fields": [
+            "partnerID"
+          ]
+        },
+        "inboundOrderLines": {
+          "cardinality": "many",
+          "target.entity": "InboundOrderLine",
+          "source.fields": [
+            "no"
+          ],
+          "target.fields": [
+            "documentNo"
+          ]
+        },
+        "shipment": {
+          "cardinality": "one",
+          "target.entity": "Shipment",
+          "source.fields": [
+            "opsFactOrderId"
+          ],
+          "target.fields": [
+            "shipmentID"
+          ]
+        },
+        "characteristics": {
+          "cardinality": "one",
+          "target.entity": "CharacteristicGroup",
+          "source.fields": [
+            "characteristicGroupCode"
+          ],
+          "target.fields": [
+            "code"
+          ]
+        },
+        "terminalLocation": {
+          "cardinality": "one",
+          "target.entity": "TerminalLocation",
+          "source.fields": [
+            "unloadingTerminalCode"
+          ],
+          "target.fields": [
+            "terminalCode"
+          ]
+        },
+        "pol": {
+          "cardinality": "one",
+          "target.entity": "polPort",
+          "source.fields": [
+            "polCode"
+          ],
+          "target.fields": [
+            "Code"
+          ]
+        },
+        "pod": {
+          "cardinality": "one",
+          "target.entity": "podPort",
+          "source.fields": [
+            "podCode"
+          ],
+          "target.fields": [
+            "Code"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read",
+              "fields": {
+                "exclude": []
+              }
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "InboundOrderLine": {
+      "source": {
+        "object": "silver_ops.v_InboundOrderLine",
+        "type": "table",
+        "key-fields": [
+          "documentNo",
+          "lineNo"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "InboundOrderLine",
+          "plural": "InboundOrderLines"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "inboundOrder": {
+          "cardinality": "one",
+          "target.entity": "InboundOrder",
+          "source.fields": [
+            "documentNo"
+          ],
+          "target.fields": [
+            "no"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read",
+              "fields": {
+                "exclude": []
+              }
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "LoadReport": {
+      "source": {
+        "object": "silver_ops.v_loadReport",
+        "type": "table",
+        "key-fields": [
+          "systemId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "Loadreport",
+          "plural": "Loadreports"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "Shipment": {
+          "cardinality": "one",
+          "target.entity": "Shipment",
+          "source.fields": [
+            "ops_fact_order_id"
+          ],
+          "target.fields": [
+            "shipmentID"
+          ]
+        },
+        "POL": {
+          "cardinality": "one",
+          "target.entity": "polPort",
+          "source.fields": [
+            "polCode"
+          ],
+          "target.fields": [
+            "Code"
+          ]
+        },
+        "POD": {
+          "cardinality": "one",
+          "target.entity": "podPort",
+          "source.fields": [
+            "podCode"
+          ],
+          "target.fields": [
+            "Code"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "LoadtypeType": {
+      "source": {
+        "object": "silver_ops.v_LoadTypeType",
+        "type": "table",
+        "key-fields": [
+          "loadType"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "LoadtypeType",
+          "plural": "LoadtypeTypes"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "LocationPDY": {
+      "source": {
+        "object": "silver_ops.Location",
+        "type": "table",
+        "key-fields": [
+          "Code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "LocationPDY",
+          "plural": "LocationsPDY"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "LocationPOD": {
+      "source": {
+        "object": "silver_ops.Location",
+        "type": "table",
+        "key-fields": [
+          "Code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "LocationPOD",
+          "plural": "LocationsPOD"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "LocationPOL": {
+      "source": {
+        "object": "silver_ops.Location",
+        "type": "table",
+        "key-fields": [
+          "Code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "LocationPOL",
+          "plural": "LocationsPOL"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "LocationPRC": {
+      "source": {
+        "object": "silver_ops.Location",
+        "type": "table",
+        "key-fields": [
+          "Code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "LocationPRC",
+          "plural": "LocationsPRC"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "LocationTS1": {
+      "source": {
+        "object": "silver_ops.Location",
+        "type": "table",
+        "key-fields": [
+          "Code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "LocationTS1",
+          "plural": "LocationsTS1"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "LocationTS2": {
+      "source": {
+        "object": "silver_ops.Location",
+        "type": "table",
+        "key-fields": [
+          "Code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "LocationPS2",
+          "plural": "LocationsTS2"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "ModeOfTransportType": {
+      "source": {
+        "object": "silver_ops.ModeOfTransportType",
+        "type": "table"
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "ModeOfTransportType",
+          "plural": "ModeOfTransportTypes"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "OrganisationLocation": {
+      "source": {
+        "object": "silver_mdm.v_Location",
+        "type": "table",
+        "key-fields": [
+          "mdmEntityID"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "OrganisationLocation",
+          "plural": "OrganisationLocations"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "Organization": {
+      "source": {
+        "object": "silver_mdm.Organization",
+        "type": "table",
+        "key-fields": [
+          "mdmEntityID"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "Organization",
+          "plural": "Organizations"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "PartnerPerCompany": {
+          "cardinality": "many",
+          "target.entity": "PartnerPerCompany",
+          "source.fields": [
+            "mdmEntityID"
+          ],
+          "target.fields": [
+            "mdmOrganizationEntityID"
+          ]
+        },
+        "Partner": {
+          "cardinality": "many",
+          "target.entity": "CustomerPartner",
+          "source.fields": [
+            "mdmEntityID"
+          ],
+          "target.fields": [
+            "mdmOrganizationEntityID"
+          ]
+        },
+        "OrganizationLocation": {
+          "cardinality": "many",
+          "target.entity": "OrganizationLocationRelation",
+          "source.fields": [
+            "mdmEntityID"
+          ],
+          "target.fields": [
+            "mdmEntityOrganizationID"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "OrganizationLocationRelation": {
+      "source": {
+        "object": "silver_mdm.OrganizationAddressRelation",
+        "type": "table",
+        "key-fields": [
+          "mdmRelationshipID"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "OrganizationLocationRelation",
+          "plural": "OrganizationLocationRelations"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "Organization": {
+          "cardinality": "one",
+          "target.entity": "Organization",
+          "source.fields": [
+            "mdmEntityOrganizationID"
+          ],
+          "target.fields": [
+            "mdmEntityID"
+          ]
+        },
+        "Location": {
+          "cardinality": "one",
+          "target.entity": "OrganisationLocation",
+          "source.fields": [
+            "mdmEntityLocationID"
+          ],
+          "target.fields": [
+            "mdmEntityID"
+          ]
+        }
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "OutboundOrder": {
+      "source": {
+        "object": "silver_ops.v_OutboundOrder",
+        "type": "table",
+        "key-fields": [
+          "systemId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "OutboundOrder",
+          "plural": "OutboundOrders"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "customer": {
+          "cardinality": "one",
+          "target.entity": "CustomerPartner",
+          "source.fields": [
+            "customerCode"
+          ],
+          "target.fields": [
+            "partnerID"
+          ]
+        },
+        "outboundOrderLines": {
+          "cardinality": "many",
+          "target.entity": "OutboundOrderLine",
+          "source.fields": [
+            "no"
+          ],
+          "target.fields": [
+            "documentNo"
+          ]
+        },
+        "shipment": {
+          "cardinality": "one",
+          "target.entity": "Shipment",
+          "source.fields": [
+            "opsFactOrderId"
+          ],
+          "target.fields": [
+            "shipmentID"
+          ]
+        },
+        "pol": {
+          "cardinality": "one",
+          "target.entity": "polPort",
+          "source.fields": [
+            "polCode"
+          ],
+          "target.fields": [
+            "Code"
+          ]
+        },
+        "pod": {
+          "cardinality": "one",
+          "target.entity": "podPort",
+          "source.fields": [
+            "podCode"
+          ],
+          "target.fields": [
+            "Code"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read",
+              "fields": {
+                "exclude": []
+              }
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "OutboundOrderLine": {
+      "source": {
+        "object": "silver_ops.v_OutboundOrderLine",
+        "type": "table",
+        "key-fields": [
+          "documentNo",
+          "lineNo"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "OutboundOrderLine",
+          "plural": "OutboundOrderLines"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "outboundOrder": {
+          "cardinality": "one",
+          "target.entity": "OutboundOrder",
+          "source.fields": [
+            "documentNo"
+          ],
+          "target.fields": [
+            "no"
+          ]
+        },
+        "charecteristics": {
+          "cardinality": "one",
+          "target.entity": "CharacteristicGroup",
+          "source.fields": [
+            "characteristicGroupCode"
+          ],
+          "target.fields": [
+            "code"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read",
+              "fields": {
+                "exclude": []
+              }
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "PartnerPerCompany": {
+      "source": {
+        "object": "silver_ops.v_PartnerPerCompany",
+        "type": "table",
+        "key-fields": [
+          "PartnerPerCompanyId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "PartnerPerCompany",
+          "plural": "PartnerPerCompanies"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "Customer": {
+          "cardinality": "many",
+          "target.entity": "CustomerPartner",
+          "source.fields": [
+            "sourceEntityID"
+          ],
+          "target.fields": [
+            "partnerID"
+          ]
+        },
+        "organization": {
+          "cardinality": "one",
+          "target.entity": "Organization",
+          "source.fields": [
+            "mdmOrganizationEntityID"
+          ],
+          "target.fields": [
+            "mdmEntityID"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "pdyPort": {
+      "source": {
+        "object": "silver_ops.Port",
+        "type": "table",
+        "key-fields": [
+          "Code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "pdyPort",
+          "plural": "pdyPorts"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "podPort": {
+      "source": {
+        "object": "silver_ops.Port",
+        "type": "table",
+        "key-fields": [
+          "Code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "podPort",
+          "plural": "podPorts"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "polPort": {
+      "source": {
+        "object": "silver_ops.Port",
+        "type": "table",
+        "key-fields": [
+          "Code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "polPort",
+          "plural": "polPorts"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "prcPort": {
+      "source": {
+        "object": "silver_ops.Port",
+        "type": "table",
+        "key-fields": [
+          "Code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "prcPort",
+          "plural": "prcPorts"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "PurchaseDocument": {
+      "source": {
+        "object": "silver_ops.PurchaseDocument",
+        "type": "table",
+        "key-fields": [
+          "systemId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "PurchaseDocument",
+          "plural": "PurchaseDocuments"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "shipment": {
+          "cardinality": "one",
+          "target.entity": "Shipment",
+          "source.fields": [
+            "OperationalOrderNo"
+          ],
+          "target.fields": [
+            "mplBookingReference"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read",
+              "fields": {
+                "exclude": []
+              }
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "SalesDocument": {
+      "source": {
+        "object": "silver_ops.v_SalesDocument",
+        "type": "table",
+        "key-fields": [
+          "salesDocumentID"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "SalesDocument",
+          "plural": "SalesDocuments"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "invoicee": {
+          "cardinality": "one",
+          "target.entity": "CustomerPartner",
+          "source.fields": [
+            "invoiceeID"
+          ],
+          "target.fields": [
+            "partnerID"
+          ]
+        },
+        "SalesDocumentLine": {
+          "cardinality": "many",
+          "target.entity": "SalesDocumentLine",
+          "source.fields": [
+            "salesDocumentID"
+          ],
+          "target.fields": [
+            "salesDocumentID"
+          ]
+        },
+        "Shipments": {
+          "cardinality": "many",
+          "target.entity": "ShipmentsPerSalesDocument",
+          "source.fields": [
+            "salesDocumentID"
+          ],
+          "target.fields": [
+            "salesDocumentID"
+          ]
+        },
+        "Document": {
+          "cardinality": "one",
+          "target.entity": "ShipmentDocument",
+          "source.fields": [
+            "documentNumber"
+          ],
+          "target.fields": [
+            "invoiceCrMemoNo"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read",
+              "fields": {
+                "exclude": [
+                  "D365FSynchErrorText",
+                  "D365FSynchStatus",
+                  "Env",
+                  "OrderNo",
+                  "SelltoCustomerNo",
+                  "SourceOrderNos"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "SalesDocumentLine": {
+      "source": {
+        "object": "silver_ops.SalesDocumentLine",
+        "type": "table",
+        "key-fields": [
+          "salesDocumentID",
+          "lineNo"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "SalesDocumentLine",
+          "plural": "SalesDocumentLines"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "SalesDocument": {
+          "cardinality": "one",
+          "target.entity": "SalesDocument",
+          "source.fields": [
+            "salesDocumentID"
+          ],
+          "target.fields": [
+            "salesDocumentID"
+          ]
+        },
+        "shipment": {
+          "cardinality": "one",
+          "target.entity": "Shipment",
+          "source.fields": [
+            "shipmentID"
+          ],
+          "target.fields": [
+            "shipmentID"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read",
+              "fields": {
+                "exclude": [
+                  "D365FSynchErrorText",
+                  "D365FSynchStatus",
+                  "Env",
+                  "OrderNo",
+                  "SelltoCustomerNo",
+                  "sourceOrderNo"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
     "Shipment": {
       "source": {
         "object": "silver_ops.v_Shipment",
@@ -182,185 +2000,36 @@
             }
           ]
         }
-      ]
-    },
-    "podPort": {
-      "source": {
-        "object": "silver_ops.Port",
-        "type": "table",
-        "key-fields": [
-          "Code"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "podPort",
-          "plural": "podPorts"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "prcPort": {
-      "source": {
-        "object": "silver_ops.Port",
-        "type": "table",
-        "key-fields": [
-          "Code"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "prcPort",
-          "plural": "prcPorts"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "pdyPort": {
-      "source": {
-        "object": "silver_ops.Port",
-        "type": "table",
-        "key-fields": [
-          "Code"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "pdyPort",
-          "plural": "pdyPorts"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "polPort": {
-      "source": {
-        "object": "silver_ops.Port",
-        "type": "table",
-        "key-fields": [
-          "Code"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "polPort",
-          "plural": "polPorts"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "TariffContainerSize": {
-      "source": {
-        "object": "silver_ops.v_TariffContainerSize",
-        "type": "table",
-        "key-fields": [
-          "containerSize"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "TariffContainerSize",
-          "plural": "TariffContainerSizes"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
+      ],
       "cache": {
         "enabled": true,
         "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
+      }
     },
-    "GoodsSummary": {
+    "ShipmentDocument": {
       "source": {
-        "object": "silver_ops.v_GoodsSummmary",
+        "object": "silver_ops.v_ShipmentDocument",
         "type": "table",
         "key-fields": [
-          "shipmentID"
+          "systemId"
         ]
       },
       "graphql": {
         "enabled": true,
         "type": {
-          "singular": "GoodsSummary",
-          "plural": "GoodsSummaries"
+          "singular": "ShipmentDocument",
+          "plural": "ShipmentDocuments"
         }
       },
       "rest": {
         "enabled": true
-      },
-      "cache": {
-        "enabled": true,
-        "ttl-seconds": 120
       },
       "relationships": {
         "Shipment": {
           "cardinality": "one",
           "target.entity": "Shipment",
           "source.fields": [
-            "shipmentID"
+            "ops_fact_order_id"
           ],
           "target.fields": [
             "shipmentID"
@@ -376,327 +2045,11 @@
             }
           ]
         }
-      ]
-    },
-    "CarrierPartner": {
-      "source": {
-        "object": "silver_ops.Partner",
-        "type": "table",
-        "key-fields": [
-          "partnerID"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "CarrierPartner",
-          "plural": "CarrierPartners"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "Shipments": {
-          "cardinality": "many",
-          "target.entity": "Shipment",
-          "source.fields": [
-            "partnerID"
-          ],
-          "target.fields": [
-            "carrierID"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "CustomerPartner": {
-      "source": {
-        "object": "silver_ops.v_Partner",
-        "type": "table",
-        "key-fields": [
-          "partnerID"
-        ]
-      },
-      "cache": {
-        "enabled": true,
-        "ttl-seconds": 15
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "CustomerPartner",
-          "plural": "CustomerPartners"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "Organization": {
-          "cardinality": "one",
-          "target.entity": "Organization",
-          "source.fields": [
-            "mdmOrganizationEntityID"
-          ],
-          "target.fields": [
-            "mdmEntityID"
-          ]
-        },
-        "Shipment": {
-          "cardinality": "many",
-          "target.entity": "Shipment",
-          "source.fields": [
-            "partnerID"
-          ],
-          "target.fields": [
-            "customerID"
-          ]
-        },
-        "InboundStockOrder": {
-          "cardinality": "many",
-          "target.entity": "InboundOrder",
-          "source.fields": [
-            "partnerID"
-          ],
-          "target.fields": [
-            "customerCode"
-          ]
-        },
-        "OutboundStockOrder": {
-          "cardinality": "many",
-          "target.entity": "OutboundOrder",
-          "source.fields": [
-            "partnerID"
-          ],
-          "target.fields": [
-            "customerCode"
-          ]
-        },
-        "Company": {
-          "cardinality": "many",
-          "target.entity": "PartnerPerCompany",
-          "source.fields": [
-            "partnerID"
-          ],
-          "target.fields": [
-            "sourceEntityID"
-          ]
-        },
-        "TariffContactGroup": {
-          "cardinality": "many",
-          "target.entity": "TariffContactGroupMember",
-          "source.fields": [
-            "partnerID"
-          ],
-          "target.fields": [
-            "PartnerId"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "OrganisationLocation": {
-      "source": {
-        "object": "silver_mdm.v_Location",
-        "type": "table",
-        "key-fields": [
-          "mdmEntityID"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "OrganisationLocation",
-          "plural": "OrganisationLocations"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
+      ],
       "cache": {
         "enabled": true,
         "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "OrganizationLocationRelation": {
-      "source": {
-        "object": "silver_mdm.OrganizationAddressRelation",
-        "type": "table",
-        "key-fields": [
-          "mdmRelationshipID"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "OrganizationLocationRelation",
-          "plural": "OrganizationLocationRelations"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "Organization": {
-          "cardinality": "one",
-          "target.entity": "Organization",
-          "source.fields": [
-            "mdmEntityOrganizationID"
-          ],
-          "target.fields": [
-            "mdmEntityID"
-          ]
-        },
-        "Location": {
-          "cardinality": "one",
-          "target.entity": "OrganisationLocation",
-          "source.fields": [
-            "mdmEntityLocationID"
-          ],
-          "target.fields": [
-            "mdmEntityID"
-          ]
-        }
-      },
-      "cache": {
-        "enabled": true,
-        "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "PartnerPerCompany": {
-      "source": {
-        "object": "silver_ops.v_PartnerPerCompany",
-        "type": "table",
-        "key-fields": [
-          "PartnerPerCompanyId"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "PartnerPerCompany",
-          "plural": "PartnerPerCompanies"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "Customer": {
-          "cardinality": "many",
-          "target.entity": "CustomerPartner",
-          "source.fields": [
-            "sourceEntityID"
-          ],
-          "target.fields": [
-            "partnerID"
-          ]
-        },
-        "organization": {
-          "cardinality": "one",
-          "target.entity": "Organization",
-          "source.fields": [
-            "mdmOrganizationEntityID"
-          ],
-          "target.fields": [
-            "mdmEntityID"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "Equipment": {
-      "source": {
-        "object": "silver_ops.Equipment",
-        "type": "table",
-        "key-fields": [
-          "equipmentID"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "Equipment",
-          "plural": "Equipment"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "cache": {
-        "enabled": true,
-        "ttl-seconds": 120
-      },
-      "relationships": {
-        "ShipmentEquipments": {
-          "cardinality": "many",
-          "target.entity": "ShipmentEquipment",
-          "source.fields": [
-            "equipmentID"
-          ],
-          "target.fields": [
-            "equipmentID"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
+      }
     },
     "ShipmentEquipment": {
       "source": {
@@ -777,40 +2130,11 @@
             }
           ]
         }
-      ]
-    },
-    "TrackingPort": {
-      "source": {
-        "object": "silver_trk.ww_ports",
-        "type": "table",
-        "key-fields": [
-          "portId"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "TrackingPort",
-          "plural": "TrackingPorts"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
+      ],
       "cache": {
         "enabled": true,
         "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
+      }
     },
     "ShipmentEquipmentTransport": {
       "source": {
@@ -881,271 +2205,41 @@
             }
           ]
         }
-      ]
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
     },
-    "Transport": {
+    "ShipmentEvent": {
       "source": {
-        "object": "silver_ops.Transport",
+        "object": "silver_ops.v_ShipmentEvent",
         "type": "table",
         "key-fields": [
-          "id"
+          "ShipmentId",
+          "systemCreatedAt"
         ]
       },
       "graphql": {
         "enabled": true,
         "type": {
-          "singular": "Transport",
-          "plural": "Transports"
+          "singular": "ShipmentEvent",
+          "plural": "ShipmentEvents"
         }
       },
       "rest": {
         "enabled": true
       },
       "relationships": {
-        "ShipmentEquipmentTransport": {
-          "cardinality": "many",
-          "target.entity": "ShipmentEquipmentTransport",
-          "source.fields": [
-            "id"
-          ],
-          "target.fields": [
-            "transportID"
-          ]
-        },
-        "Vessel": {
-          "cardinality": "one",
-          "target.entity": "Vessel",
-          "source.fields": [
-            "vesselID"
-          ],
-          "target.fields": [
-            "vesselID"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "SalesDocumentLine": {
-      "source": {
-        "object": "silver_ops.SalesDocumentLine",
-        "type": "table",
-        "key-fields": [
-          "salesDocumentID",
-          "lineNo"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "SalesDocumentLine",
-          "plural": "SalesDocumentLines"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "SalesDocument": {
-          "cardinality": "one",
-          "target.entity": "SalesDocument",
-          "source.fields": [
-            "salesDocumentID"
-          ],
-          "target.fields": [
-            "salesDocumentID"
-          ]
-        },
-        "shipment": {
-          "cardinality": "one",
-          "target.entity": "Shipment",
-          "source.fields": [
-            "shipmentID"
-          ],
-          "target.fields": [
-            "shipmentID"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read",
-              "fields": {
-                "exclude": [
-                  "D365FSynchErrorText",
-                  "D365FSynchStatus",
-                  "Env",
-                  "OrderNo",
-                  "SelltoCustomerNo",
-                  "sourceOrderNo"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "BillOfLadingParty": {
-      "source": {
-        "object": "silver_ops.BillOfLadingParty",
-        "type": "table",
-        "key-fields": [
-          "systemId"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "BillOfLadingParty",
-          "plural": "BillOfLadingParties"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "BillOfLading": {
-          "cardinality": "one",
-          "target.entity": "BillOfLading",
-          "source.fields": [
-            "DocumentNo"
-          ],
-          "target.fields": [
-            "DocumentNo"
-          ]
-        },
-        "Partner": {
-          "cardinality": "one",
-          "target.entity": "CustomerPartner",
-          "source.fields": [
-            "ContactNo"
-          ],
-          "target.fields": [
-            "partnerID"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "BillOfLadingPerShipmentEquipment": {
-      "source": {
-        "object": "silver_ops.BillOfLadingPerShipmentEquipment",
-        "type": "table",
-        "key-fields": [
-          "systemId"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "BillOfLadingPerShipmentEquipment",
-          "plural": "BillOfLadingsPerShipmentEquipment"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "ShipmentEquipment": {
-          "cardinality": "one",
-          "target.entity": "ShipmentEquipment",
-          "source.fields": [
-            "shipmentEquipmentId"
-          ],
-          "target.fields": [
-            "id"
-          ]
-        },
-        "BillOfLading": {
-          "cardinality": "one",
-          "target.entity": "BillOfLading",
-          "source.fields": [
-            "BOLId"
-          ],
-          "target.fields": [
-            "systemId"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "BillOfLading": {
-      "source": {
-        "object": "silver_ops.BillOfLading",
-        "type": "table",
-        "key-fields": [
-          "systemId"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "BillOfLading",
-          "plural": "BillsOfLading"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "BillOfLadingPerShipmentEquipment": {
-          "cardinality": "many",
-          "target.entity": "BillOfLadingPerShipmentEquipment",
-          "source.fields": [
-            "systemId"
-          ],
-          "target.fields": [
-            "BOLId"
-          ]
-        },
         "Shipment": {
           "cardinality": "one",
           "target.entity": "Shipment",
           "source.fields": [
-            "EnvOrderNo"
+            "ShipmentId"
           ],
           "target.fields": [
             "shipmentID"
           ]
-        },
-        "Party": {
-          "cardinality": "many",
-          "target.entity": "BillOfLadingParty",
-          "source.fields": [
-            "DocumentNo"
-          ],
-          "target.fields": [
-            "DocumentNo"
-          ]
         }
       },
       "permissions": [
@@ -1157,239 +2251,11 @@
             }
           ]
         }
-      ]
-    },
-    "SalesDocument": {
-      "source": {
-        "object": "silver_ops.v_SalesDocument",
-        "type": "table",
-        "key-fields": [
-          "salesDocumentID"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "SalesDocument",
-          "plural": "SalesDocuments"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "invoicee": {
-          "cardinality": "one",
-          "target.entity": "CustomerPartner",
-          "source.fields": [
-            "invoiceeID"
-          ],
-          "target.fields": [
-            "partnerID"
-          ]
-        },
-        "SalesDocumentLine": {
-          "cardinality": "many",
-          "target.entity": "SalesDocumentLine",
-          "source.fields": [
-            "salesDocumentID"
-          ],
-          "target.fields": [
-            "salesDocumentID"
-          ]
-        },
-        "Shipments": {
-          "cardinality": "many",
-          "target.entity": "ShipmentsPerSalesDocument",
-          "source.fields": [
-            "salesDocumentID"
-          ],
-          "target.fields": [
-            "salesDocumentID"
-          ]
-        },
-        "Document": {
-          "cardinality": "one",
-          "target.entity": "ShipmentDocument",
-          "source.fields": [
-            "documentNumber"
-          ],
-          "target.fields": [
-            "invoiceCrMemoNo"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read",
-              "fields": {
-                "exclude": [
-                  "D365FSynchErrorText",
-                  "D365FSynchStatus",
-                  "Env",
-                  "OrderNo",
-                  "SelltoCustomerNo",
-                  "SourceOrderNos"
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "CargoMovementType": {
-      "source": {
-        "object": "silver_ops.CargoMovementType",
-        "type": "table"
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "CargoMovementType",
-          "plural": "CargoMovementTypes"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
+      ],
       "cache": {
         "enabled": true,
         "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "EquipmentEventType": {
-      "source": {
-        "object": "silver_ops.EquipmentEventType",
-        "type": "table"
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "EquipmentEventType",
-          "plural": "EquipmentEventTypes"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "cache": {
-        "enabled": true,
-        "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "ModeOfTransportType": {
-      "source": {
-        "object": "silver_ops.ModeOfTransportType",
-        "type": "table"
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "ModeOfTransportType",
-          "plural": "ModeOfTransportTypes"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "cache": {
-        "enabled": true,
-        "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "Organization": {
-      "source": {
-        "object": "silver_mdm.Organization",
-        "type": "table",
-        "key-fields": [
-          "mdmEntityID"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "Organization",
-          "plural": "Organizations"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "PartnerPerCompany": {
-          "cardinality": "many",
-          "target.entity": "PartnerPerCompany",
-          "source.fields": [
-            "mdmEntityID"
-          ],
-          "target.fields": [
-            "mdmOrganizationEntityID"
-          ]
-        },
-        "Partner": {
-          "cardinality": "many",
-          "target.entity": "CustomerPartner",
-          "source.fields": [
-            "mdmEntityID"
-          ],
-          "target.fields": [
-            "mdmOrganizationEntityID"
-          ]
-        },
-        "OrganizationLocation": {
-          "cardinality": "many",
-          "target.entity": "OrganizationLocationRelation",
-          "source.fields": [
-            "mdmEntityID"
-          ],
-          "target.fields": [
-            "mdmEntityOrganizationID"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
+      }
     },
     "ShipmentLocationType": {
       "source": {
@@ -1409,482 +2275,6 @@
       "cache": {
         "enabled": true,
         "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "ShipmentStatusType": {
-      "source": {
-        "object": "silver_ops.ShipmentStatusType",
-        "type": "table"
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "ShipmentStatusType",
-          "plural": "ShipmentStatusTypes"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "cache": {
-        "enabled": true,
-        "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "TransportPlanStageType": {
-      "source": {
-        "object": "silver_ops.TransportPlanStageType",
-        "type": "table"
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "TransportPlanStageType",
-          "plural": "TransportPlanStageTypes"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "cache": {
-        "enabled": true,
-        "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "InboundOrder": {
-      "source": {
-        "object": "silver_ops.InboundOrder",
-        "type": "table",
-        "key-fields": [
-          "systemId"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "InboundOrder",
-          "plural": "InboundOrders"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "customer": {
-          "cardinality": "one",
-          "target.entity": "CustomerPartner",
-          "source.fields": [
-            "customerCode"
-          ],
-          "target.fields": [
-            "partnerID"
-          ]
-        },
-        "inboundOrderLines": {
-          "cardinality": "many",
-          "target.entity": "InboundOrderLine",
-          "source.fields": [
-            "no"
-          ],
-          "target.fields": [
-            "documentNo"
-          ]
-        },
-        "shipment": {
-          "cardinality": "one",
-          "target.entity": "Shipment",
-          "source.fields": [
-            "opsFactOrderId"
-          ],
-          "target.fields": [
-            "shipmentID"
-          ]
-        },
-        "characteristics": {
-          "cardinality": "one",
-          "target.entity": "CharacteristicGroup",
-          "source.fields": [
-            "characteristicGroupCode"
-          ],
-          "target.fields": [
-            "code"
-          ]
-        },
-        "terminalLocation": {
-          "cardinality": "one",
-          "target.entity": "TerminalLocation",
-          "source.fields": [
-            "unloadingTerminalCode"
-          ],
-          "target.fields": [
-            "terminalCode"
-          ]
-        },
-        "pol": {
-          "cardinality": "one",
-          "target.entity": "polPort",
-          "source.fields": [
-            "polCode"
-          ],
-          "target.fields": [
-            "Code"
-          ]
-        },
-        "pod": {
-          "cardinality": "one",
-          "target.entity": "podPort",
-          "source.fields": [
-            "podCode"
-          ],
-          "target.fields": [
-            "Code"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read",
-              "fields": {
-                "exclude": []
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "InboundOrderLine": {
-      "source": {
-        "object": "silver_ops.v_InboundOrderLine",
-        "type": "table",
-        "key-fields": [
-          "documentNo",
-          "lineNo"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "InboundOrderLine",
-          "plural": "InboundOrderLines"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "inboundOrder": {
-          "cardinality": "one",
-          "target.entity": "InboundOrder",
-          "source.fields": [
-            "documentNo"
-          ],
-          "target.fields": [
-            "no"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read",
-              "fields": {
-                "exclude": []
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "OutboundOrder": {
-      "source": {
-        "object": "silver_ops.v_OutboundOrder",
-        "type": "table",
-        "key-fields": [
-          "systemId"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "OutboundOrder",
-          "plural": "OutboundOrders"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "customer": {
-          "cardinality": "one",
-          "target.entity": "CustomerPartner",
-          "source.fields": [
-            "customerCode"
-          ],
-          "target.fields": [
-            "partnerID"
-          ]
-        },
-        "outboundOrderLines": {
-          "cardinality": "many",
-          "target.entity": "OutboundOrderLine",
-          "source.fields": [
-            "no"
-          ],
-          "target.fields": [
-            "documentNo"
-          ]
-        },
-        "shipment": {
-          "cardinality": "one",
-          "target.entity": "Shipment",
-          "source.fields": [
-            "opsFactOrderId"
-          ],
-          "target.fields": [
-            "shipmentID"
-          ]
-        },
-        "pol": {
-          "cardinality": "one",
-          "target.entity": "polPort",
-          "source.fields": [
-            "polCode"
-          ],
-          "target.fields": [
-            "Code"
-          ]
-        },
-        "pod": {
-          "cardinality": "one",
-          "target.entity": "podPort",
-          "source.fields": [
-            "podCode"
-          ],
-          "target.fields": [
-            "Code"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read",
-              "fields": {
-                "exclude": []
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "OutboundOrderLine": {
-      "source": {
-        "object": "silver_ops.v_OutboundOrderLine",
-        "type": "table",
-        "key-fields": [
-          "documentNo",
-          "lineNo"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "OutboundOrderLine",
-          "plural": "OutboundOrderLines"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "outboundOrder": {
-          "cardinality": "one",
-          "target.entity": "OutboundOrder",
-          "source.fields": [
-            "documentNo"
-          ],
-          "target.fields": [
-            "no"
-          ]
-        },
-        "charecteristics": {
-          "cardinality": "one",
-          "target.entity": "CharacteristicGroup",
-          "source.fields": [
-            "characteristicGroupCode"
-          ],
-          "target.fields": [
-            "code"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read",
-              "fields": {
-                "exclude": []
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "PurchaseDocument": {
-      "source": {
-        "object": "silver_ops.PurchaseDocument",
-        "type": "table",
-        "key-fields": [
-          "systemId"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "PurchaseDocument",
-          "plural": "PurchaseDocuments"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "shipment": {
-          "cardinality": "one",
-          "target.entity": "Shipment",
-          "source.fields": [
-            "OperationalOrderNo"
-          ],
-          "target.fields": [
-            "mplBookingReference"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read",
-              "fields": {
-                "exclude": []
-              }
-            }
-          ]
-        }
-      ]
-    },
-    "CharacteristicGroup": {
-      "source": {
-        "object": "silver_ops.v_Characteristics",
-        "type": "table",
-        "key-fields": [
-          "code"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "CharacteristicGroup",
-          "plural": "CharacteristicGroups"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "cache": {
-        "enabled": true,
-        "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "CargoItem": {
-      "source": {
-        "object": "silver_ops.CargoItem",
-        "type": "table",
-        "key-fields": [
-          "cargoItemID"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "CargoItem",
-          "plural": "CargoItems"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "Shipment": {
-          "cardinality": "one",
-          "target.entity": "Shipment",
-          "source.fields": [
-            "shipmentId"
-          ],
-          "target.fields": [
-            "shipmentID"
-          ]
-        },
-        "ShipmentEquipment": {
-          "cardinality": "one",
-          "target.entity": "ShipmentEquipment",
-          "source.fields": [
-            "shipmentEquipmentId"
-          ],
-          "target.fields": [
-            "id"
-          ]
-        }
       },
       "permissions": [
         {
@@ -1947,589 +2337,22 @@
             }
           ]
         }
-      ]
-    },
-    "TerminalLocation": {
-      "source": {
-        "object": "silver_ops.v_TerminalLocation",
-        "type": "table",
-        "key-fields": [
-          "terminalCode"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "TerminalLocation",
-          "plural": "TerminalLocations"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
+      ],
       "cache": {
         "enabled": true,
         "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
+      }
     },
-    "LoadReport": {
+    "ShipmentStatusType": {
       "source": {
-        "object": "silver_ops.v_loadReport",
-        "type": "table",
-        "key-fields": [
-          "systemId"
-        ]
+        "object": "silver_ops.ShipmentStatusType",
+        "type": "table"
       },
       "graphql": {
         "enabled": true,
         "type": {
-          "singular": "Loadreport",
-          "plural": "Loadreports"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "Shipment": {
-          "cardinality": "one",
-          "target.entity": "Shipment",
-          "source.fields": [
-            "ops_fact_order_id"
-          ],
-          "target.fields": [
-            "shipmentID"
-          ]
-        },
-        "POL": {
-          "cardinality": "one",
-          "target.entity": "polPort",
-          "source.fields": [
-            "polCode"
-          ],
-          "target.fields": [
-            "Code"
-          ]
-        },
-        "POD": {
-          "cardinality": "one",
-          "target.entity": "podPort",
-          "source.fields": [
-            "podCode"
-          ],
-          "target.fields": [
-            "Code"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "ShipmentDocument": {
-      "source": {
-        "object": "silver_ops.ShipmentDocuments",
-        "type": "table",
-        "key-fields": [
-          "systemId"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "ShipmentDocument",
-          "plural": "ShipmentDocuments"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "Shipment": {
-          "cardinality": "one",
-          "target.entity": "Shipment",
-          "source.fields": [
-            "ops_fact_order_id"
-          ],
-          "target.fields": [
-            "shipmentID"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "TrackingEvent": {
-      "source": {
-        "object": "silver_trk.TrackingEvent",
-        "type": "table",
-        "key-fields": [
-          "trackingEventID"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "TrackingEvent",
-          "plural": "TrackingEvents"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "ShipmentEquipment": {
-          "cardinality": "one",
-          "target.entity": "ShipmentEquipment",
-          "source.fields": [
-            "shipmentEquipmentID"
-          ],
-          "target.fields": [
-            "id"
-          ]
-        },
-        "TrackingPort": {
-          "cardinality": "one",
-          "target.entity": "TrackingPort",
-          "source.fields": [
-            "portID"
-          ],
-          "target.fields": [
-            "portId"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "LocationPOD": {
-      "source": {
-        "object": "silver_ops.Location",
-        "type": "table",
-        "key-fields": [
-          "Code"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "LocationPOD",
-          "plural": "LocationsPOD"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "LocationPOL": {
-      "source": {
-        "object": "silver_ops.Location",
-        "type": "table",
-        "key-fields": [
-          "Code"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "LocationPOL",
-          "plural": "LocationsPOL"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "LocationPDY": {
-      "source": {
-        "object": "silver_ops.Location",
-        "type": "table",
-        "key-fields": [
-          "Code"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "LocationPDY",
-          "plural": "LocationsPDY"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "LocationPRC": {
-      "source": {
-        "object": "silver_ops.Location",
-        "type": "table",
-        "key-fields": [
-          "Code"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "LocationPRC",
-          "plural": "LocationsPRC"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "LocationTS1": {
-      "source": {
-        "object": "silver_ops.Location",
-        "type": "table",
-        "key-fields": [
-          "Code"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "LocationTS1",
-          "plural": "LocationsTS1"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "LocationTS2": {
-      "source": {
-        "object": "silver_ops.Location",
-        "type": "table",
-        "key-fields": [
-          "Code"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "LocationPS2",
-          "plural": "LocationsTS2"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "TariffContainerGroup": {
-      "source": {
-        "object": "silver_ops.TariffContainerGroup",
-        "type": "table",
-        "key-fields": [
-          "ContainerCode"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "TariffContainerGroup",
-          "plural": "TariffContainerGroups"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "Tariff": {
-          "cardinality": "many",
-          "target.entity": "Tariff",
-          "source.fields": [
-            "ContainerCode"
-          ],
-          "target.fields": [
-            "ContainerType"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "TariffContactGroupMember": {
-      "source": {
-        "object": "silver_ops.TariffContactGroupMembers",
-        "type": "table",
-        "key-fields": [
-          "ContactGroupCode"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "TariffContactGroupMember",
-          "plural": "TariffContactGroupMembers"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "Tariff": {
-          "cardinality": "many",
-          "target.entity": "Tariff",
-          "source.fields": [
-            "ContactGroupCode"
-          ],
-          "target.fields": [
-            "SourceNo"
-          ]
-        },
-        "Customer": {
-          "cardinality": "one",
-          "target.entity": "CustomerPartner",
-          "source.fields": [
-            "PartnerId"
-          ],
-          "target.fields": [
-            "partnerID"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "TariffSurcharge": {
-      "source": {
-        "object": "silver_ops.TariffSurcharge",
-        "type": "table",
-        "key-fields": [
-          "systemId"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "TariffSurcharge",
-          "plural": "TariffSurcharges"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "Tariff": {
-          "cardinality": "one",
-          "target.entity": "Tariff",
-          "source.fields": [
-            "TariffId"
-          ],
-          "target.fields": [
-            "TariffSurchargeKey"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "ShipmentEvent": {
-      "source": {
-        "object": "silver_ops.v_ShipmentEvent",
-        "type": "table",
-        "key-fields": [
-          "ShipmentId",
-          "systemCreatedAt"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "ShipmentEvent",
-          "plural": "ShipmentEvents"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "relationships": {
-        "Shipment": {
-          "cardinality": "one",
-          "target.entity": "Shipment",
-          "source.fields": [
-            "ShipmentId"
-          ],
-          "target.fields": [
-            "shipmentID"
-          ]
-        }
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "LoadtypeType": {
-      "source": {
-        "object": "silver_ops.v_LoadTypeType",
-        "type": "table",
-        "key-fields": [
-          "loadType"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "LoadtypeType",
-          "plural": "LoadtypeTypes"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "cache": {
-        "enabled": true,
-        "ttl-seconds": 120
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "read"
-            }
-          ]
-        }
-      ]
-    },
-    "FlowtypeType": {
-      "source": {
-        "object": "silver_ops.v_FlowTypeType",
-        "type": "table",
-        "key-fields": [
-          "flowType"
-        ]
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "FlowtypeType",
-          "plural": "FlowtypeTypes"
+          "singular": "ShipmentStatusType",
+          "plural": "ShipmentStatusTypes"
         }
       },
       "rest": {
@@ -2659,7 +2482,11 @@
             }
           ]
         }
-      ]
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
     },
     "TariffAll": {
       "source": {
@@ -2770,6 +2597,437 @@
             }
           ]
         }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "TariffContactGroupMember": {
+      "source": {
+        "object": "silver_ops.TariffContactGroupMembers",
+        "type": "table",
+        "key-fields": [
+          "ContactGroupCode"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "TariffContactGroupMember",
+          "plural": "TariffContactGroupMembers"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "Tariff": {
+          "cardinality": "many",
+          "target.entity": "Tariff",
+          "source.fields": [
+            "ContactGroupCode"
+          ],
+          "target.fields": [
+            "SourceNo"
+          ]
+        },
+        "Customer": {
+          "cardinality": "one",
+          "target.entity": "CustomerPartner",
+          "source.fields": [
+            "PartnerId"
+          ],
+          "target.fields": [
+            "partnerID"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "TariffContainerGroup": {
+      "source": {
+        "object": "silver_ops.TariffContainerGroup",
+        "type": "table",
+        "key-fields": [
+          "ContainerCode"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "TariffContainerGroup",
+          "plural": "TariffContainerGroups"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "Tariff": {
+          "cardinality": "many",
+          "target.entity": "Tariff",
+          "source.fields": [
+            "ContainerCode"
+          ],
+          "target.fields": [
+            "ContainerType"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "TariffContainerSize": {
+      "source": {
+        "object": "silver_ops.v_TariffContainerSize",
+        "type": "table",
+        "key-fields": [
+          "containerSize"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "TariffContainerSize",
+          "plural": "TariffContainerSizes"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "TariffSurcharge": {
+      "source": {
+        "object": "silver_ops.TariffSurcharge",
+        "type": "table",
+        "key-fields": [
+          "systemId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "TariffSurcharge",
+          "plural": "TariffSurcharges"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "Tariff": {
+          "cardinality": "one",
+          "target.entity": "Tariff",
+          "source.fields": [
+            "TariffId"
+          ],
+          "target.fields": [
+            "TariffSurchargeKey"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "TerminalLocation": {
+      "source": {
+        "object": "silver_ops.v_TerminalLocation",
+        "type": "table",
+        "key-fields": [
+          "terminalCode"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "TerminalLocation",
+          "plural": "TerminalLocations"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "TrackingEvent": {
+      "source": {
+        "object": "silver_trk.TrackingEvent",
+        "type": "table",
+        "key-fields": [
+          "trackingEventID"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "TrackingEvent",
+          "plural": "TrackingEvents"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "ShipmentEquipment": {
+          "cardinality": "one",
+          "target.entity": "ShipmentEquipment",
+          "source.fields": [
+            "shipmentEquipmentID"
+          ],
+          "target.fields": [
+            "id"
+          ]
+        },
+        "TrackingPort": {
+          "cardinality": "one",
+          "target.entity": "TrackingPort",
+          "source.fields": [
+            "portID"
+          ],
+          "target.fields": [
+            "portId"
+          ]
+        },
+        "TrackingVessel": {
+          "cardinality": "one",
+          "target.entity": "TrackingVessel",
+          "source.fields": [
+            "vesselId"
+          ],
+          "target.fields": [
+            "vesselId"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "TrackingPort": {
+      "source": {
+        "object": "silver_trk.ww_ports",
+        "type": "table",
+        "key-fields": [
+          "portId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "TrackingPort",
+          "plural": "TrackingPorts"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "TrackingVessel": {
+      "source": {
+        "object": "silver_trk.ww_vessels",
+        "type": "table",
+        "key-fields": [
+          "vesselId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "TrackingVessel",
+          "plural": "TrackingVessels"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ]
+    },
+    "Transport": {
+      "source": {
+        "object": "silver_ops.Transport",
+        "type": "table",
+        "key-fields": [
+          "id"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "Transport",
+          "plural": "Transports"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "ShipmentEquipmentTransport": {
+          "cardinality": "many",
+          "target.entity": "ShipmentEquipmentTransport",
+          "source.fields": [
+            "id"
+          ],
+          "target.fields": [
+            "transportID"
+          ]
+        },
+        "Vessel": {
+          "cardinality": "one",
+          "target.entity": "Vessel",
+          "source.fields": [
+            "vesselID"
+          ],
+          "target.fields": [
+            "vesselID"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+    "TransportPlanStageType": {
+      "source": {
+        "object": "silver_ops.TransportPlanStageType",
+        "type": "table"
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "TransportPlanStageType",
+          "plural": "TransportPlanStageTypes"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
       ]
     },
     "Vessel": {
@@ -2811,7 +3069,11 @@
             }
           ]
         }
-      ]
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
     },
     "WindwardRegistrationFeedback": {
       "source": {
@@ -2852,70 +3114,11 @@
             }
           ]
         }
-      ]
-    },
-    "EquipmentMap": {
-      "source": {
-        "object": "silver_ops.usp_MapSource",
-        "type": "stored-procedure",
-        "parameters": {
-          "customerScope": "string"
-        }
-      },
+      ],
       "cache": {
         "enabled": true,
-        "ttl-seconds": 60
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "EquipmentMap",
-          "plural": "EquipmentMaps"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "execute"
-            }
-          ]
-        }
-      ]
-    },
-    "GlobalSearch": {
-      "source": {
-        "object": "silver_ops.usp_globalSearch",
-        "type": "stored-procedure",
-        "parameters": {
-          "searchString": "string",
-          "customerScope": "string"
-        }
-      },
-      "graphql": {
-        "enabled": true,
-        "type": {
-          "singular": "GlobalSearch",
-          "plural": "GlobalSearches"
-        }
-      },
-      "rest": {
-        "enabled": true
-      },
-      "permissions": [
-        {
-          "role": "anonymous",
-          "actions": [
-            {
-              "action": "execute"
-            }
-          ]
-        }
-      ]
+        "ttl-seconds": 120
+      }
     }
   }
 }
