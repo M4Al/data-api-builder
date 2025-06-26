@@ -4,13 +4,13 @@
     "database-type": "mssql",
     "connection-string": "Data Source=nqf4kgvoqm4ufazdzriupb2pay-hmnbvxar2mgu7e3ng27fsqy3we.database.fabric.microsoft.com,1433;User ID=8bfaf0d6-fa20-4ed5-a450-0005ceb77729;Password=z5y8Q~hLcfdAflVrfnYoVxdavIJXZb5tlH~tAbRn;Pooling=True;Min Pool Size=0;Max Pool Size=100;Multiple Active Result Sets=False;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;Authentication=ActiveDirectoryServicePrincipal;Initial Catalog=apiLayer-345587c4-1232-457e-9761-b6bca3d72e2e",
     "options": {
-      "set-session-context": false
+      "set-session-context": true
     }
   },
   "runtime": {
     "telemetry": {
       "application-insights": {
-        "enabled": true,
+        "enabled": false,
         "connection-string": "InstrumentationKey=d303d229-1055-4f48-a811-4dc0a3d4aa1e;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/;ApplicationId=c98a3731-8125-4aa0-867a-3361c0e536db"
       }
     },
@@ -2816,7 +2816,7 @@
     },
     "TrackingEvent": {
       "source": {
-        "object": "silver_trk.TrackingEvent",
+        "object": "silver_trk.v_TrackingEvent",
         "type": "table",
         "key-fields": [
           "trackingEventID"
