@@ -32,6 +32,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         /// <inheritdoc />
         public string Build(SqlQueryStructure structure)
         {
+            string query;
             string dataIdent = QuoteIdentifier(SqlQueryStructure.DATA_IDENT);
             string fromSql = $"{QuoteIdentifier(structure.DatabaseObject.SchemaName)}.{QuoteIdentifier(structure.DatabaseObject.Name)} " +
                              $"AS {QuoteIdentifier($"{structure.SourceAlias}")}{Build(structure.Joins)}";
@@ -45,12 +46,28 @@ namespace Azure.DataApiBuilder.Core.Resolvers
 
             string aggregations = BuildAggregationColumns(structure);
 
-            StringBuilder query = new();
 
-            query.Append($"SELECT TOP {structure.Limit()} {WrappedColumns(structure)} {aggregations}")
-                .Append($" FROM {fromSql}")
-                .Append($" WHERE {predicates}")
-                .Append(BuildGroupBy(structure))
+            string orderBy = $" ORDER BY {Build(structure.OrderByColumns)}";
+
+            //Add recordcount if needed
+            if (structure.IsListQuery)
+            {
+                string recordCountSql = $"SELECT cast(count(1) as int) as RecordCount "
+                    + $" FROM {fromSql}"
+                    + $" WHERE {predicates}";
+                fromSql += $" OUTER APPLY ({recordCountSql}) RecordCountQuery";
+                query = $"SELECT {WrappedColumns(structure)}, RecordCountQuery.RecordCount"
+                    + $" FROM {fromSql}"
+                    + $" WHERE {predicates}"
+                    + $" OFFSET {structure.Offset()} ROWS FETCH NEXT {structure.Limit()} ROWS ONLY";
+            } else
+            {
+                query = $"SELECT {WrappedColumns(structure)}"
+                    + $" FROM {fromSql}"
+                    + $" WHERE {predicates}";
+            }
+            
+            query.Append(BuildGroupBy(structure))
                 .Append(BuildHaving(structure))
                 .Append(BuildOrderBy(structure))
                 .Append(BuildJsonPath(structure));

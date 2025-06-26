@@ -124,8 +124,10 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     if (!ConfigProvider.IsLateConfigured)
                     {
                         string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
-                        QueryExecutorLogger.LogDebug("{correlationId} Executing query: {queryText}", correlationId, sqltext);
+                            QueryExecutorLogger.LogDebug("{correlationId} Executing query : {queryText}", correlationId, sqltext);
+                            QueryExecutorLogger.LogDebug($"Paramaters: {string.Join(", ", parameters.Select(param => $"{param.Key}: {param.Value?.Value} (DbType: {param.Value?.DbType}, SqlDbType: {param.Value?.SqlDbType})"))}");
                     }
+
 
                     TResult? result = ExecuteQueryAgainstDb(conn, sqltext, parameters, dataReaderHandler, httpContext, dataSourceName, args);
 
@@ -201,6 +203,8 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     // When IsLateConfigured is true we are in a hosted scenario and do not reveal query information.
                     if (!ConfigProvider.IsLateConfigured)
                     {
+                      QueryExecutorLogger.LogDebug("{correlationId} {ts} Executing query: {queryText}", correlationId, DateTime.Now.ToString() , sqltext);
+
                         string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
                         QueryExecutorLogger.LogDebug("{correlationId} Executing query: {queryText}", correlationId, sqltext);
                     }
@@ -474,6 +478,11 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         public async Task<DbResultSet>
             ExtractResultSetFromDbDataReaderAsync(DbDataReader dbDataReader, List<string>? args = null)
         {
+            // If the first dataset has no records, try if there is a second one ...
+            if (!dbDataReader.HasRows)
+            {
+                dbDataReader.NextResult();
+            }
             DbResultSet dbResultSet = new(resultProperties: GetResultPropertiesAsync(dbDataReader).Result ?? new());
             long availableBytes = _maxResponseSizeBytes;
             while (await ReadAsync(dbDataReader))

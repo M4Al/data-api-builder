@@ -330,6 +330,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 // We want to avoid caching token metadata because token metadata can change frequently and we want to avoid caching it.
                 if (!dbPolicyConfigured && entityCacheEnabled)
                 {
+
                     return await GetResultInCacheScenario(
                     runtimeConfig,
                     structure,
