@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -250,7 +252,7 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLMutationTests
 
             string currentDbResponse = await GetDatabaseResultAsync(dbQueryToVerifyDeletion);
             JsonDocument currentResult = JsonDocument.Parse(currentDbResponse);
-            Assert.AreEqual(currentResult.RootElement.GetProperty("maxId").GetInt64(), 14);
+            Assert.AreEqual(currentResult.RootElement.GetProperty("maxId").GetInt64(), 20);
             JsonElement graphQLResponse = await ExecuteGraphQLRequestAsync(graphQLMutation, graphQLMutationName, isAuthenticated: true);
 
             // Stored Procedure didn't return anything
@@ -259,7 +261,7 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLMutationTests
             // check to verify new element is inserted
             string updatedDbResponse = await GetDatabaseResultAsync(dbQueryToVerifyDeletion);
             JsonDocument updatedResult = JsonDocument.Parse(updatedDbResponse);
-            Assert.AreEqual(updatedResult.RootElement.GetProperty("maxId").GetInt64(), 13);
+            Assert.AreEqual(updatedResult.RootElement.GetProperty("maxId").GetInt64(), 19);
         }
 
         public async Task InsertMutationOnTableWithTriggerWithNonAutoGenPK(string dbQuery)
@@ -1109,6 +1111,34 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLMutationTests
                 Assert.Fail("Unexpected failure. Atleast one of the delete mutations should've succeeded");
             }
 
+        }
+
+        /// <summary>
+        /// Performs create item on different Windows Regional format settings and validate that the data type Float is correct
+        /// </summary>
+        public async Task CanCreateItemWithCultureInvariant(string cultureInfo, string dbQuery)
+        {
+            CultureInfo ci = new(cultureInfo);
+            CultureInfo.DefaultThreadCurrentCulture = ci;
+
+            string graphQLMutationName = "createSales";
+            string graphQLMutation = @"
+                mutation {
+                    createSales (item: { item_name: ""test_name"", subtotal: 3.14, tax: 1.15 }) {
+                        id
+                        item_name
+                        subtotal
+                        tax
+                    }
+                }
+            ";
+
+            JsonElement response = await ExecuteGraphQLRequestAsync(graphQLMutation, graphQLMutationName, isAuthenticated: true);
+            string dbResponse = await GetDatabaseResultAsync(dbQuery);
+            using JsonDocument dbResponseJson = JsonDocument.Parse(dbResponse);
+
+            // Validate results
+            Assert.AreEqual(Convert.ToDouble(dbResponseJson.RootElement.GetProperty("subtotal").GetDouble(), CultureInfo.InvariantCulture), response.GetProperty("subtotal").GetDouble());
         }
 
         #endregion

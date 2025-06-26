@@ -6,6 +6,7 @@ using System.Data.Common;
 using System.Net;
 using System.Text;
 using Azure.Core;
+using Azure.DataApiBuilder.Config;
 using Azure.DataApiBuilder.Config.ObjectModel;
 using Azure.DataApiBuilder.Core.Authorization;
 using Azure.DataApiBuilder.Core.Configurations;
@@ -34,7 +35,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         /// from the configuration controller.
         /// Key: datasource name, Value: access token for this datasource.
         /// </summary>
-        private readonly Dictionary<string, string?> _accessTokensFromConfiguration;
+        private Dictionary<string, string?> _accessTokensFromConfiguration;
 
         /// <summary>
         /// The MsSql specific connection string builders.
@@ -61,27 +62,91 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         /// </summary>
         private Dictionary<string, bool> _dataSourceToSessionContextUsage;
 
+        private readonly RuntimeConfigProvider _runtimeConfigProvider;
+
+        private const string QUERYIDHEADER = "QueryIdentifyingIds";
+
         public MsSqlQueryExecutor(
             RuntimeConfigProvider runtimeConfigProvider,
             DbExceptionParser dbExceptionParser,
             ILogger<IQueryExecutor> logger,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            HotReloadEventHandler<HotReloadEventArgs>? handler = null)
             : base(dbExceptionParser,
                   logger,
                   runtimeConfigProvider,
-                  httpContextAccessor)
+                  httpContextAccessor,
+                  handler)
         {
-            RuntimeConfig runtimeConfig = runtimeConfigProvider.GetConfig();
-            IEnumerable<KeyValuePair<string, DataSource>> mssqldbs = runtimeConfig.GetDataSourceNamesToDataSourcesIterator().Where(x => x.Value.DatabaseType is DatabaseType.MSSQL || x.Value.DatabaseType is DatabaseType.DWSQL);
             _dataSourceAccessTokenUsage = new Dictionary<string, bool>();
             _dataSourceToSessionContextUsage = new Dictionary<string, bool>();
             _accessTokensFromConfiguration = runtimeConfigProvider.ManagedIdentityAccessToken;
+            _runtimeConfigProvider = runtimeConfigProvider;
+            ConfigureMsSqlQueryEecutor();
+        }
+
+        /// <summary>
+        /// Creates a SQLConnection to the data source of given name. This method also adds an event handler to
+        /// the connection's InfoMessage to extract the statement ID from the request and add it to httpcontext.
+        /// </summary>
+        /// <param name="dataSourceName">The name of the data source.</param>
+        /// <returns>The SQLConnection</returns>
+        /// <exception cref="DataApiBuilderException">Exception thrown if datasource is not found.</exception>
+        public override SqlConnection CreateConnection(string dataSourceName)
+        {
+            if (!ConnectionStringBuilders.ContainsKey(dataSourceName))
+            {
+                throw new DataApiBuilderException("Query execution failed. Could not find datasource to execute query against", HttpStatusCode.BadRequest, DataApiBuilderException.SubStatusCodes.DataSourceNotFound);
+            }
+
+            SqlConnection conn = new()
+            {
+                ConnectionString = ConnectionStringBuilders[dataSourceName].ConnectionString,
+            };
+
+            // Extract info message from SQLConnection
+            conn.InfoMessage += (object sender, SqlInfoMessageEventArgs e) =>
+            {
+                try
+                {
+                    // Log the statement ids returned by the SQL engine when we executed the batch.
+                    // This helps in correlating with SQL engine telemetry.
+
+                    // If the info message has an error code that matches the well-known codes used for returning statement ID,
+                    // then we can be certain that the message contains no PII.
+                    IEnumerable<SqlError> errorsReceived = e.Errors.Cast<SqlError>();
+
+                    IEnumerable<SqlInformationalCodes> allInfoCodesKnown = Enum.GetValues(typeof(SqlInformationalCodes)).Cast<SqlInformationalCodes>();
+
+                    IEnumerable<string> infoErrorMessagesReceived = errorsReceived.Join(allInfoCodesKnown, error => error.Number, code => (int)code, (error, code) => error.Message);
+
+                    foreach (string infoErrorMessageReceived in infoErrorMessagesReceived)
+                    {
+                        // Add statement ID to request
+                        AddStatementIDToMiddlewareContext(infoErrorMessageReceived);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    QueryExecutorLogger.LogError($"Error in info message handler while extracting query-identifying ID from SQLConnection. Error: {ex.Message}");
+                }
+            };
+
+            return conn;
+        }
+
+        /// <summary>
+        /// Configure during construction or a hot-reload scenario.
+        /// </summary>
+        private void ConfigureMsSqlQueryEecutor()
+        {
+            IEnumerable<KeyValuePair<string, DataSource>> mssqldbs = _runtimeConfigProvider.GetConfig().GetDataSourceNamesToDataSourcesIterator().Where(x => x.Value.DatabaseType is DatabaseType.MSSQL || x.Value.DatabaseType is DatabaseType.DWSQL);
 
             foreach ((string dataSourceName, DataSource dataSource) in mssqldbs)
             {
                 SqlConnectionStringBuilder builder = new(dataSource.ConnectionString);
 
-                if (runtimeConfigProvider.IsLateConfigured)
+                if (_runtimeConfigProvider.IsLateConfigured)
                 {
                     builder.Encrypt = SqlConnectionEncryptOption.Mandatory;
                     builder.TrustServerCertificate = false;
@@ -349,6 +414,34 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 if (parameterEntry.Value.SqlDbType is not null)
                 {
                     parameter.SqlDbType = (SqlDbType)parameterEntry.Value.SqlDbType;
+                }
+            }
+        }
+
+        private void AddStatementIDToMiddlewareContext(string statementId)
+        {
+            HttpContext? httpContext = HttpContextAccessor?.HttpContext;
+            if (httpContext != null)
+            {
+                // locking is because we could have multiple queries in a single http request and each query will be processed in parallel leading to concurrent access of the httpContext.Items.
+                lock (_httpContextLock)
+                {
+                    if (httpContext.Items.TryGetValue(QUERYIDHEADER, out object? currentValue) && currentValue is not null)
+                    {
+                        try
+                        {
+                            httpContext.Items[QUERYIDHEADER] = (string)currentValue + ";" + statementId;
+                        }
+                        catch
+                        {
+                            QueryExecutorLogger.LogWarning("Could not cast query identifying ID to string. The ID was not added to httpcontext");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        httpContext.Items[QUERYIDHEADER] = statementId;
+                    }
                 }
             }
         }

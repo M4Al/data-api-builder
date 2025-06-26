@@ -160,12 +160,12 @@ namespace Cli.Tests
         }
 
         /// <summary>
-        /// Verify that if either database or graphQLSchema is null or empty, we will get error.
+        /// Verify that if database is null or empty, we will get error.and if graphQLSchema is null or empty, we will not get error as passing graphQLSchema is optional now.
         /// </summary>
         [DataRow(null, "testcontainer", "", false, DisplayName = "Both database and schema are either null or empty.")]
         [DataRow("", "testcontainer", "testschema", false, DisplayName = "database is empty.")]
-        [DataRow("testDatabase", "testcontainer", "", false, DisplayName = "database is provided, Schema is null.")]
-        [DataRow("testDatabase", null, "", false, DisplayName = "database is provided, container and Schema is null/empty.")]
+        [DataRow("testDatabase", "testcontainer", "", true, DisplayName = "database is provided, Schema is null.")]
+        [DataRow("testDatabase", null, "", true, DisplayName = "database is provided, container and Schema is null/empty.")]
         [DataRow("testDatabase", null, TEST_SCHEMA_FILE, true, DisplayName = "database and schema provided, container is null/empty.")]
         [DataTestMethod]
         public void VerifyRequiredOptionsForCosmosDbNoSqlDatabase(
@@ -302,6 +302,7 @@ namespace Cli.Tests
         [DataRow("AppService", null, null, DisplayName = "AppService with no audience and no issuer specified.")]
         [DataRow("Simulator", null, null, DisplayName = "Simulator with no audience and no issuer specified.")]
         [DataRow("AzureAD", "aud-xxx", "issuer-xxx", DisplayName = "AzureAD with both audience and issuer specified.")]
+        [DataRow("EntraID", "aud-xxx", "issuer-xxx", DisplayName = "EntraID with both audience and issuer specified.")]
         public Task EnsureCorrectConfigGenerationWithDifferentAuthenticationProviders(
             string authenticationProvider,
             string? audience,
@@ -426,7 +427,7 @@ namespace Cli.Tests
         ///
         ///      b. When --graphql.multiple-create.enabled option is not used
         ///           - In this case, fields related to multiple mutation and multiple create operations will NOT be written to the config file.
-        /// 
+        ///
         /// </summary>
         [DataTestMethod]
         [DataRow(DatabaseType.MSSQL, CliBool.True, DisplayName = "Init command with '--graphql.multiple-create.enabled true' for MsSQL database type")]
@@ -453,7 +454,7 @@ namespace Cli.Tests
 
             if (databaseType is DatabaseType.CosmosDB_NoSQL)
             {
-                // A schema file is added since its mandatory for CosmosDB_NoSQL 
+                // A schema file is added since its mandatory for CosmosDB_NoSQL
                 ((MockFileSystem)_fileSystem!).AddFile(TEST_SCHEMA_FILE, new MockFileData(""));
 
                 options = new(

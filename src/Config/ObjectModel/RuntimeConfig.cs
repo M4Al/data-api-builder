@@ -7,6 +7,7 @@ using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.DataApiBuilder.Service.Exceptions;
+using Microsoft.Extensions.Logging;
 
 namespace Azure.DataApiBuilder.Config.ObjectModel;
 
@@ -21,7 +22,7 @@ public record RuntimeConfig
 
     public RuntimeOptions? Runtime { get; init; }
 
-    public RuntimeEntities Entities { get; init; }
+    public virtual RuntimeEntities Entities { get; init; }
 
     public DataSourceFiles? DataSourceFiles { get; init; }
 
@@ -67,6 +68,12 @@ public record RuntimeConfig
          Runtime.Rest is null ||
          Runtime.Rest.Enabled) &&
          DataSource.DatabaseType != DatabaseType.CosmosDB_NoSQL;
+
+    [JsonIgnore]
+    public bool IsHealthEnabled =>
+        Runtime is null ||
+        Runtime.Health is null ||
+        Runtime.Health.Enabled;
 
     /// <summary>
     /// A shorthand method to determine whether Static Web Apps is configured for the current authentication provider.
@@ -132,7 +139,34 @@ public record RuntimeConfig
     }
 
     [JsonIgnore]
-    public string DefaultDataSourceName { get; private set; }
+    public string DefaultDataSourceName { get; set; }
+
+    /// <summary>
+    /// Retrieves the value of runtime.graphql.aggregation.enabled property if present, default is true.
+    /// </summary>
+    [JsonIgnore]
+    public bool EnableAggregation =>
+        Runtime is not null &&
+        Runtime.GraphQL is not null &&
+        Runtime.GraphQL.EnableAggregation;
+
+    [JsonIgnore]
+    public HashSet<string> AllowedRolesForHealth =>
+        Runtime?.Health?.Roles ?? new HashSet<string>();
+
+    [JsonIgnore]
+    public int CacheTtlSecondsForHealthReport =>
+        Runtime?.Health?.CacheTtlSeconds ?? EntityCacheOptions.DEFAULT_TTL_SECONDS;
+
+    /// <summary>
+    /// Retrieves the value of runtime.graphql.dwnto1joinopt.enabled property if present, default is false.
+    /// </summary>
+    [JsonIgnore]
+    public bool EnableDwNto1JoinOpt =>
+        Runtime is not null &&
+        Runtime.GraphQL is not null &&
+        Runtime.GraphQL.FeatureFlags is not null &&
+        Runtime.GraphQL.FeatureFlags.EnableDwNto1JoinQueryOptimization;
 
     private Dictionary<string, DataSource> _dataSourceNameToDataSource;
 
@@ -177,7 +211,12 @@ public record RuntimeConfig
     /// <param name="Runtime">Runtime settings.</param>
     /// <param name="DataSourceFiles">List of datasource files for multiple db scenario. Null for single db scenario.</param>
     [JsonConstructor]
-    public RuntimeConfig(string? Schema, DataSource DataSource, RuntimeEntities Entities, RuntimeOptions? Runtime = null, DataSourceFiles? DataSourceFiles = null)
+    public RuntimeConfig(
+        string? Schema,
+        DataSource DataSource,
+        RuntimeEntities Entities,
+        RuntimeOptions? Runtime = null,
+        DataSourceFiles? DataSourceFiles = null)
     {
         this.Schema = Schema ?? DEFAULT_CONFIG_SCHEMA_LINK;
         this.DataSource = DataSource;
@@ -185,16 +224,32 @@ public record RuntimeConfig
         this.Entities = Entities;
         this.DefaultDataSourceName = Guid.NewGuid().ToString();
 
+        if (this.DataSource is null)
+        {
+            throw new DataApiBuilderException(
+                message: "data-source is a mandatory property in DAB Config",
+                statusCode: HttpStatusCode.UnprocessableEntity,
+                subStatusCode: DataApiBuilderException.SubStatusCodes.ConfigValidationError);
+        }
+
         // we will set them up with default values
         _dataSourceNameToDataSource = new Dictionary<string, DataSource>
         {
-            { DefaultDataSourceName, this.DataSource }
+            { this.DefaultDataSourceName, this.DataSource }
         };
 
         _entityNameToDataSourceName = new Dictionary<string, string>();
+        if (Entities is null)
+        {
+            throw new DataApiBuilderException(
+                message: "entities is a mandatory property in DAB Config",
+                statusCode: HttpStatusCode.UnprocessableEntity,
+                subStatusCode: DataApiBuilderException.SubStatusCodes.ConfigValidationError);
+        }
+
         foreach (KeyValuePair<string, Entity> entity in Entities)
         {
-            _entityNameToDataSourceName.TryAdd(entity.Key, DefaultDataSourceName);
+            _entityNameToDataSourceName.TryAdd(entity.Key, this.DefaultDataSourceName);
         }
 
         // Process data source and entities information for each database in multiple database scenario.
@@ -205,7 +260,8 @@ public record RuntimeConfig
             IEnumerable<KeyValuePair<string, Entity>> allEntities = Entities.AsEnumerable();
             // Iterate through all the datasource files and load the config.
             IFileSystem fileSystem = new FileSystem();
-            FileSystemRuntimeConfigLoader loader = new(fileSystem);
+            // This loader is not used as a part of hot reload and therefore does not need a handler.
+            FileSystemRuntimeConfigLoader loader = new(fileSystem, handler: null);
 
             foreach (string dataSourceFile in DataSourceFiles.SourceFiles)
             {
@@ -269,7 +325,7 @@ public record RuntimeConfig
     /// <param name="dataSourceName">Name of datasource.</param>
     /// <returns>DataSource object.</returns>
     /// <exception cref="DataApiBuilderException">Not found exception if key is not found.</exception>
-    public DataSource GetDataSourceFromDataSourceName(string dataSourceName)
+    public virtual DataSource GetDataSourceFromDataSourceName(string dataSourceName)
     {
         CheckDataSourceNamePresent(dataSourceName);
         return _dataSourceNameToDataSource[dataSourceName];
@@ -374,7 +430,7 @@ public record RuntimeConfig
     /// <param name="entityName">Name of the entity to check cache configuration.</param>
     /// <returns>Number of seconds (ttl) that a cache entry should be valid before cache eviction.</returns>
     /// <exception cref="DataApiBuilderException">Raised when an invalid entity name is provided or if the entity has caching disabled.</exception>
-    public int GetEntityCacheEntryTtl(string entityName)
+    public virtual int GetEntityCacheEntryTtl(string entityName)
     {
         if (!Entities.TryGetValue(entityName, out Entity? entityConfig))
         {
@@ -403,12 +459,47 @@ public record RuntimeConfig
     }
 
     /// <summary>
+    /// Returns the cache level value for a given entity.
+    /// If the property is not set, returns the default (L1L2) for a given entity.
+    /// </summary>
+    /// <param name="entityName">Name of the entity to check cache configuration.</param>
+    /// <returns>Cache level that a cache entry should be stored in.</returns>
+    /// <exception cref="DataApiBuilderException">Raised when an invalid entity name is provided or if the entity has caching disabled.</exception>
+    public virtual EntityCacheLevel GetEntityCacheEntryLevel(string entityName)
+    {
+        if (!Entities.TryGetValue(entityName, out Entity? entityConfig))
+        {
+            throw new DataApiBuilderException(
+                message: $"{entityName} is not a valid entity.",
+                statusCode: HttpStatusCode.BadRequest,
+                subStatusCode: DataApiBuilderException.SubStatusCodes.EntityNotFound);
+        }
+
+        if (!entityConfig.IsCachingEnabled)
+        {
+            throw new DataApiBuilderException(
+                message: $"{entityName} does not have caching enabled.",
+                statusCode: HttpStatusCode.BadRequest,
+                subStatusCode: DataApiBuilderException.SubStatusCodes.NotSupported);
+        }
+
+        if (entityConfig.Cache.UserProvidedLevelOptions)
+        {
+            return entityConfig.Cache.Level.Value;
+        }
+        else
+        {
+            return EntityCacheLevel.L1L2;
+        }
+    }
+
+    /// <summary>
     /// Whether the caching service should be used for a given operation. This is determined by
     /// - whether caching is enabled globally
     /// - whether the datasource is SQL and session context is disabled.
     /// </summary>
     /// <returns>Whether cache operations should proceed.</returns>
-    public bool CanUseCache()
+    public virtual bool CanUseCache()
     {
         bool setSessionContextEnabled = DataSource.GetTypedOptions<MsSqlOptions>()?.SetSessionContext ?? true;
         return IsCachingEnabled && !setSessionContextEnabled;
@@ -535,5 +626,74 @@ public record RuntimeConfig
         {
             return defaultPageSize;
         }
+    }
+
+    /// <summary>
+    /// Checks if the property log-level or its value are null
+    /// </summary>
+    public bool IsLogLevelNull()
+    {
+        if (Runtime is null ||
+            Runtime.Telemetry is null ||
+            Runtime.Telemetry.LoggerLevel is null ||
+            Runtime.Telemetry.LoggerLevel.Count == 0)
+        {
+            return true;
+        }
+
+        foreach (KeyValuePair<string, LogLevel?> logger in Runtime!.Telemetry.LoggerLevel)
+        {
+            if (logger.Key == null)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Takes in the RuntimeConfig object and checks the LogLevel.
+    /// If LogLevel is not null, it will return the current value as a LogLevel,
+    /// else it will take the default option by checking host mode.
+    /// If host mode is Development, return `LogLevel.Debug`, else
+    /// for production returns `LogLevel.Error`.
+    /// </summary>
+    public LogLevel GetConfiguredLogLevel(string loggerFilter = "")
+    {
+
+        if (!IsLogLevelNull())
+        {
+            int max = 0;
+            string currentFilter = string.Empty;
+            foreach (KeyValuePair<string, LogLevel?> logger in Runtime!.Telemetry!.LoggerLevel!)
+            {
+                // Checks if the new key that is valid has more priority than the current key
+                if (logger.Key.Length > max && loggerFilter.StartsWith(logger.Key))
+                {
+                    max = logger.Key.Length;
+                    currentFilter = logger.Key;
+                }
+            }
+
+            Runtime!.Telemetry!.LoggerLevel!.TryGetValue(currentFilter, out LogLevel? value);
+            if (value is not null)
+            {
+                return (LogLevel)value;
+            }
+
+            Runtime!.Telemetry!.LoggerLevel!.TryGetValue("default", out value);
+            if (value is not null)
+            {
+                return (LogLevel)value;
+            }
+        }
+
+        if (IsDevelopmentMode())
+        {
+            return LogLevel.Debug;
+        }
+
+        return LogLevel.Error;
     }
 }

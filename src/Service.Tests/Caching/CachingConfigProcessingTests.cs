@@ -59,8 +59,6 @@ public class CachingConfigProcessingTests
             logger: null,
             connectionString: null,
             replaceEnvVar: false,
-            dataSourceName: string.Empty,
-            datasourceNameToConnectionString: null,
             replacementFailureMode: EnvironmentVariableReplacementFailureMode.Throw);
 
         // Assert
@@ -108,8 +106,6 @@ public class CachingConfigProcessingTests
             logger: null,
             connectionString: null,
             replaceEnvVar: false,
-            dataSourceName: string.Empty,
-            datasourceNameToConnectionString: null,
             replacementFailureMode: EnvironmentVariableReplacementFailureMode.Throw);
 
         // Assert
@@ -148,15 +144,13 @@ public class CachingConfigProcessingTests
             logger: null,
             connectionString: null,
             replaceEnvVar: false,
-            dataSourceName: string.Empty,
-            datasourceNameToConnectionString: null,
             replacementFailureMode: EnvironmentVariableReplacementFailureMode.Throw);
 
         // Assert
         Assert.IsNotNull(config, message: "Config must not be null, runtime config JSON deserialization failed.");
         Assert.AreEqual(expected: expectCacheEnabled, actual: config.IsCachingEnabled, message: "RuntimeConfig.CacheEnabled expected to be: " + expectCacheEnabled);
 
-        EntityCacheOptions? resolvedGlobalCacheOptions = config?.Runtime?.Cache;
+        RuntimeCacheOptions? resolvedGlobalCacheOptions = config?.Runtime?.Cache;
         if (expectCacheEnabled)
         {
             Assert.IsNotNull(config?.IsCachingEnabled, message: "Expected global cache property to be non-null.");
@@ -196,8 +190,6 @@ public class CachingConfigProcessingTests
             logger: null,
             connectionString: null,
             replaceEnvVar: false,
-            dataSourceName: string.Empty,
-            datasourceNameToConnectionString: null,
             replacementFailureMode: EnvironmentVariableReplacementFailureMode.Throw);
 
         // Assert
@@ -227,14 +219,12 @@ public class CachingConfigProcessingTests
                        logger: null,
                        connectionString: null,
                        replaceEnvVar: false,
-                       dataSourceName: string.Empty,
-                       datasourceNameToConnectionString: null,
                        replacementFailureMode: EnvironmentVariableReplacementFailureMode.Throw);
 
         // Assert
         Assert.IsNotNull(config, message: "Config must not be null, runtime config JSON deserialization failed.");
 
-        EntityCacheOptions? resolvedGlobalCacheOptions = config?.Runtime?.Cache;
+        RuntimeCacheOptions? resolvedGlobalCacheOptions = config?.Runtime?.Cache;
         Assert.IsNotNull(config?.IsCachingEnabled, message: "Expected global cache property to be non-null.");
         Assert.IsNotNull(resolvedGlobalCacheOptions, message: "GlobalCacheConfig must not be null, unexpected JSON deserialization result.");
         Assert.AreEqual(expected: expectedGlobalCacheTtl, actual: resolvedGlobalCacheOptions.TtlSeconds);
@@ -265,8 +255,6 @@ public class CachingConfigProcessingTests
                        logger: null,
                        connectionString: null,
                        replaceEnvVar: false,
-                       dataSourceName: string.Empty,
-                       datasourceNameToConnectionString: null,
                        replacementFailureMode: EnvironmentVariableReplacementFailureMode.Throw);
         Assert.IsNotNull(config, message: "Test setup failure. Config must not be null, runtime config JSON deserialization failed.");
 
@@ -315,8 +303,6 @@ public class CachingConfigProcessingTests
                        logger: null,
                        connectionString: null,
                        replaceEnvVar: false,
-                       dataSourceName: string.Empty,
-                       datasourceNameToConnectionString: null,
                        replacementFailureMode: EnvironmentVariableReplacementFailureMode.Throw);
         Assert.IsNotNull(config, message: "Test setup failure. Config must not be null, runtime config JSON deserialization failed.");
 
@@ -359,8 +345,6 @@ public class CachingConfigProcessingTests
                        logger: null,
                        connectionString: null,
                        replaceEnvVar: false,
-                       dataSourceName: string.Empty,
-                       datasourceNameToConnectionString: null,
                        replacementFailureMode: EnvironmentVariableReplacementFailureMode.Throw);
         Assert.IsNotNull(config, message: "Test setup failure. Config must not be null, runtime config JSON deserialization failed.");
 

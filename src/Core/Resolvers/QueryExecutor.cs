@@ -3,10 +3,12 @@
 
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Azure.DataApiBuilder.Config;
 using Azure.DataApiBuilder.Core.Configurations;
 using Azure.DataApiBuilder.Core.Models;
 using Azure.DataApiBuilder.Service.Exceptions;
@@ -23,6 +25,9 @@ namespace Azure.DataApiBuilder.Core.Resolvers
     public class QueryExecutor<TConnection> : IQueryExecutor
         where TConnection : DbConnection, new()
     {
+        private const string TOTALDBEXECUTIONTIME = "TotalDbExecutionTime";
+        protected static readonly object _httpContextLock = new();
+
         protected DbExceptionParser DbExceptionParser { get; }
         protected ILogger<IQueryExecutor> QueryExecutorLogger { get; }
         protected RuntimeConfigProvider ConfigProvider { get; }
@@ -47,7 +52,8 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         public QueryExecutor(DbExceptionParser dbExceptionParser,
                              ILogger<IQueryExecutor> logger,
                              RuntimeConfigProvider configProvider,
-                             IHttpContextAccessor httpContextAccessor)
+                             IHttpContextAccessor httpContextAccessor,
+                             HotReloadEventHandler<HotReloadEventArgs>? handler)
         {
             DbExceptionParser = dbExceptionParser;
             QueryExecutorLogger = logger;
@@ -92,21 +98,24 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 dataSourceName = ConfigProvider.GetConfig().DefaultDataSourceName;
             }
 
-            if (!ConnectionStringBuilders.ContainsKey(dataSourceName))
-            {
-                throw new DataApiBuilderException("Query execution failed. Could not find datasource to execute query against", HttpStatusCode.BadRequest, DataApiBuilderException.SubStatusCodes.DataSourceNotFound);
-            }
+            using TConnection conn = CreateConnection(dataSourceName);
 
-            using TConnection conn = new()
+            // Check if connection creation succeeded
+            if (conn == null)
             {
-                ConnectionString = ConnectionStringBuilders[dataSourceName].ConnectionString,
-            };
+                throw new DataApiBuilderException(
+                    "Connection creation failed. Connection was null",
+                    HttpStatusCode.InternalServerError,
+                    DataApiBuilderException.SubStatusCodes.UnexpectedError);
+            }
 
             int retryAttempt = 0;
 
             SetManagedIdentityAccessTokenIfAny(conn, dataSourceName);
 
-            return _retryPolicy.Execute(() =>
+            TResult? result = default(TResult?);
+
+            result = _retryPolicy.Execute(() =>
             {
                 retryAttempt++;
                 try
@@ -149,6 +158,8 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     }
                 }
             });
+
+            return result;
         }
 
         /// <inheritdoc/>
@@ -160,25 +171,29 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             HttpContext? httpContext = null,
             List<string>? args = null)
         {
+            int retryAttempt = 0;
+
             if (string.IsNullOrEmpty(dataSourceName))
             {
                 dataSourceName = ConfigProvider.GetConfig().DefaultDataSourceName;
             }
 
-            if (!ConnectionStringBuilders.ContainsKey(dataSourceName))
-            {
-                throw new DataApiBuilderException("Query execution failed. Could not find datasource to execute query against", HttpStatusCode.BadRequest, DataApiBuilderException.SubStatusCodes.DataSourceNotFound);
-            }
+            using TConnection conn = CreateConnection(dataSourceName);
 
-            int retryAttempt = 0;
-            using TConnection conn = new()
+            // Check if connection creation succeeded
+            if (conn == null)
             {
-                ConnectionString = ConnectionStringBuilders[dataSourceName].ConnectionString,
-            };
+                throw new DataApiBuilderException(
+                    "Connection creation failed. Connection was null",
+                    HttpStatusCode.InternalServerError,
+                    DataApiBuilderException.SubStatusCodes.UnexpectedError);
+            }
 
             await SetManagedIdentityAccessTokenIfAnyAsync(conn, dataSourceName);
 
-            return await _retryPolicyAsync.ExecuteAsync(async () =>
+            TResult? result = default(TResult);
+
+            result = await _retryPolicyAsync.ExecuteAsync(async () =>
             {
                 retryAttempt++;
                 try
@@ -221,6 +236,32 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     }
                 }
             });
+
+            return result;
+        }
+
+        /// <summary>
+        /// Creates and setups a TConnection to the data source of given name
+        /// </summary>
+        /// <param name="dataSourceName">The data source name</param>
+        /// <returns>A connection to the data source</returns>
+        /// <exception cref="DataApiBuilderException">Exeption thrown if the data source could not be found</exception>
+        public virtual TConnection CreateConnection(string dataSourceName)
+        {
+            if (!ConnectionStringBuilders.ContainsKey(dataSourceName))
+            {
+                throw new DataApiBuilderException(
+                    "Query execution failed. Could not find datasource to execute query against",
+                    HttpStatusCode.BadRequest,
+                    DataApiBuilderException.SubStatusCodes.DataSourceNotFound);
+            }
+
+            TConnection conn = new()
+            {
+                ConnectionString = ConnectionStringBuilders[dataSourceName].ConnectionString,
+            };
+
+            return conn;
         }
 
         /// <summary>
@@ -243,31 +284,43 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             string dataSourceName,
             List<string>? args = null)
         {
-            await conn.OpenAsync();
-            DbCommand cmd = PrepareDbCommand(conn, sqltext, parameters, httpContext, dataSourceName);
-
+            Stopwatch queryExecutionTimer = new();
+            queryExecutionTimer.Start();
             try
             {
-                using DbDataReader dbDataReader = ConfigProvider.GetConfig().MaxResponseSizeLogicEnabled() ?
-                    await cmd.ExecuteReaderAsync(CommandBehavior.SequentialAccess) : await cmd.ExecuteReaderAsync(CommandBehavior.CloseConnection);
-                if (dataReaderHandler is not null && dbDataReader is not null)
+                await conn.OpenAsync();
+                DbCommand cmd = PrepareDbCommand(conn, sqltext, parameters, httpContext, dataSourceName);
+                TResult? result = default(TResult);
+                try
                 {
-                    return await dataReaderHandler(dbDataReader, args);
+                    using DbDataReader dbDataReader = ConfigProvider.GetConfig().MaxResponseSizeLogicEnabled() ?
+                        await cmd.ExecuteReaderAsync(CommandBehavior.SequentialAccess) : await cmd.ExecuteReaderAsync(CommandBehavior.CloseConnection);
+                    if (dataReaderHandler is not null && dbDataReader is not null)
+                    {
+                        result = await dataReaderHandler(dbDataReader, args);
+                    }
+                    else
+                    {
+                        result = default(TResult);
+                    }
                 }
-                else
+                catch (DbException e)
                 {
-                    return default(TResult);
+                    string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
+                    QueryExecutorLogger.LogError(
+                        exception: e,
+                        message: "{correlationId} Query execution error due to:\n{errorMessage}",
+                        correlationId,
+                        e.Message);
+                    throw DbExceptionParser.Parse(e);
                 }
+
+                return result;
             }
-            catch (DbException e)
+            finally
             {
-                string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
-                QueryExecutorLogger.LogError(
-                    exception: e,
-                    message: "{correlationId} Query execution error due to:\n{errorMessage}",
-                    correlationId,
-                    e.Message);
-                throw DbExceptionParser.Parse(e);
+                queryExecutionTimer.Stop();
+                AddDbExecutionTimeToMiddlewareContext(queryExecutionTimer.ElapsedMilliseconds);
             }
         }
 
@@ -320,31 +373,41 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             string dataSourceName,
             List<string>? args = null)
         {
-            conn.Open();
-            DbCommand cmd = PrepareDbCommand(conn, sqltext, parameters, httpContext, dataSourceName);
-
+            Stopwatch queryExecutionTimer = new();
+            queryExecutionTimer.Start();
             try
             {
-                using DbDataReader dbDataReader = ConfigProvider.GetConfig().MaxResponseSizeLogicEnabled() ?
-                    cmd.ExecuteReader(CommandBehavior.SequentialAccess) : cmd.ExecuteReader(CommandBehavior.CloseConnection);
-                if (dataReaderHandler is not null && dbDataReader is not null)
+                conn.Open();
+                DbCommand cmd = PrepareDbCommand(conn, sqltext, parameters, httpContext, dataSourceName);
+
+                try
                 {
-                    return dataReaderHandler(dbDataReader, args);
+                    using DbDataReader dbDataReader = ConfigProvider.GetConfig().MaxResponseSizeLogicEnabled() ?
+                        cmd.ExecuteReader(CommandBehavior.SequentialAccess) : cmd.ExecuteReader(CommandBehavior.CloseConnection);
+                    if (dataReaderHandler is not null && dbDataReader is not null)
+                    {
+                        return dataReaderHandler(dbDataReader, args);
+                    }
+                    else
+                    {
+                        return default(TResult);
+                    }
                 }
-                else
+                catch (DbException e)
                 {
-                    return default(TResult);
+                    string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
+                    QueryExecutorLogger.LogError(
+                        exception: e,
+                        message: "{correlationId} Query execution error due to:\n{errorMessage}",
+                        correlationId,
+                        e.Message);
+                    throw DbExceptionParser.Parse(e);
                 }
             }
-            catch (DbException e)
+            finally
             {
-                string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
-                QueryExecutorLogger.LogError(
-                    exception: e,
-                    message: "{correlationId} Query execution error due to:\n{errorMessage}",
-                    correlationId,
-                    e.Message);
-                throw DbExceptionParser.Parse(e);
+                queryExecutionTimer.Stop();
+                AddDbExecutionTimeToMiddlewareContext(queryExecutionTimer.ElapsedMilliseconds);
             }
         }
 
@@ -803,6 +866,26 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     message: $"The JSON result size exceeds max result size of {_maxResponseSizeMB}MB. Please use pagination to reduce size of result.",
                     statusCode: HttpStatusCode.RequestEntityTooLarge,
                     subStatusCode: DataApiBuilderException.SubStatusCodes.ErrorProcessingData);
+            }
+        }
+
+        internal virtual void AddDbExecutionTimeToMiddlewareContext(long time)
+        {
+            HttpContext? httpContext = HttpContextAccessor?.HttpContext;
+            if (httpContext != null)
+            {
+                // locking is because we could have multiple queries in a single http request and each query will be processed in parallel leading to concurrent access of the httpContext.Items.
+                lock (_httpContextLock)
+                {
+                    if (httpContext.Items.TryGetValue(TOTALDBEXECUTIONTIME, out object? currentValue) && currentValue is not null)
+                    {
+                        httpContext.Items[TOTALDBEXECUTIONTIME] = (long)currentValue + time;
+                    }
+                    else
+                    {
+                        httpContext.Items[TOTALDBEXECUTIONTIME] = time;
+                    }
+                }
             }
         }
     }

@@ -109,6 +109,23 @@ namespace Azure.DataApiBuilder.Service.Tests
         }
 
         /// <summary>
+        /// This function generates an invalid schema file that is used by the tests
+        /// to ensure that validation of the config file fails during a hot reload event 
+        /// </summary>
+        /// <returns></returns>
+        public static string GenerateInvalidSchema()
+        {
+            string schemaString = @"
+{
+    ""$schema"": ""https://json-schema.org/draft-07/schema"",
+    ""$id"": ""https://github.com/Azure/data-api-builder/releases/download/vmajor.minor.patch/dab.draft.schema.json"",
+    ""title"": ""Data API builder"",
+    ""description"": ""Schema for 
+}";
+            return schemaString;
+        }
+
+        /// <summary>
         /// Schema property of the config json. This is used for constructing the required config json strings
         /// for unit tests
         /// </summary>
