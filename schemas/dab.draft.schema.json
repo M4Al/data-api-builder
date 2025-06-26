@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json-schema.org/draft-07/schema",
+  "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "https://github.com/Azure/data-api-builder/releases/download/vmajor.minor.patch/dab.draft.schema.json",
   "title": "Data API builder",
   "description": "Schema for Data API builder engine",
@@ -34,6 +34,33 @@
         "options": {
           "description": "Database specific properties for the backend database",
           "type": "object"
+        },
+        "health": {
+          "description": "Health check configuration",
+          "type": [ "object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable health check endpoint",
+              "default": true,
+              "additionalProperties": false
+            },
+            "name": {
+              "type": [ "string", "null" ],
+              "description": "Identifier for data source in health check report.",
+              "default": null,
+              "additionalProperties": false
+            },
+            "threshold-ms": {
+              "type": "integer",
+              "description": "Health Check maximum time for query to execute (in ms).",
+              "default": 1000,
+              "additionalProperties": false,
+              "minimum": 1,
+              "maximum": 2147483647
+            }
+          }
         }
       },
       "allOf": [
@@ -65,15 +92,10 @@
                     "type": "string"
                   }
                 },
-                "required": [
-                  "database",
-                  "schema"
-                ]
+                "required": ["database", "schema"]
               }
             },
-            "required": [
-              "options"
-            ]
+            "required": ["options"]
           }
         },
         {
@@ -104,11 +126,7 @@
           "if": {
             "properties": {
               "database-type": {
-                "enum": [
-                  "mysql",
-                  "postgresql",
-                  "cosmosdb_postgresql"
-                ]
+                "enum": ["mysql", "postgresql", "cosmosdb_postgresql"]
               }
             }
           },
@@ -124,10 +142,7 @@
           }
         }
       ],
-      "required": [
-        "database-type",
-        "connection-string"
-      ]
+      "required": ["database-type", "connection-string"]
     },
     "data-source-files": {
       "type": "array",
@@ -139,6 +154,23 @@
       "description": "Runtime configuration settings",
       "additionalProperties": false,
       "properties": {
+        "pagination": {
+          "type": "object",
+          "properties": {
+            "max-page-size": {
+              "type": ["integer", "null"],
+              "description": "Defines the maximum number of records that can be returned in a single page of results. If set to null, the default value is 100,000.",
+              "default": 100000,
+              "minimum": 1
+            },
+            "default-page-size": {
+              "type": ["integer", "null"],
+              "description": "Sets the default number of records returned in a single response. When this limit is reached, a continuation token is provided to retrieve the next page. If set to null, the default value is 100.",
+              "default": 100,
+              "minimum": 1
+            }
+          }
+        },
         "rest": {
           "type": "object",
           "description": "Global REST endpoint configuration",
@@ -177,7 +209,7 @@
               "description": "Allow enabling/disabling GraphQL requests for all entities."
             },
             "depth-limit": {
-              "type": [ "integer", "null" ],
+              "type": ["integer", "null"],
               "description": "Maximum allowed depth of a GraphQL query.",
               "default": null
             },
@@ -207,17 +239,21 @@
           "description": "Global hosting configuration",
           "additionalProperties": false,
           "properties": {
+            "max-response-size-mb": {
+              "type": ["integer", "null"],
+              "description": "Specifies the maximum size, in megabytes, of the database response allowed in a single result. If set to null, the default value is 158 MB.",
+              "default": 158,
+              "minimum": 1,
+              "maximum": 158
+            },
             "mode": {
               "description": "Set if running in Development or Production mode",
-              "type": "string",
+              "type": ["string", "null"],
               "default": "production",
-              "enum": [
-                "production",
-                "development"
-              ]
+              "enum": ["production", "development"]
             },
             "cors": {
-              "type": "object",
+              "type": ["object", "null"],
               "description": "Configure CORS",
               "additionalProperties": false,
               "properties": {
@@ -237,12 +273,37 @@
               }
             },
             "authentication": {
-              "type": "object",
+              "type": ["object", "null"],
               "additionalProperties": false,
               "properties": {
                 "provider": {
-                  "type": "string",
                   "description": "The name of authentication provider",
+                  "oneOf": [
+                    {
+                      "const": "StaticWebApps",
+                      "description": "Authentication provided by Azure Static Web Apps."
+                    },
+                    {
+                      "const": "EntraID",
+                      "description": "Authentication provided by Microsoft Entra ID (formerly Azure AD). Use the JWT property to configure this provider."
+                    },
+                    {
+                      "const": "Simulator",
+                      "description": "Simulated authentication for development and testing purposes."
+                    },
+                    {
+                      "const": "AppService",
+                      "description": "Authentication provided by Azure App Service."
+                    },
+                    {
+                      "const": "AzureAD",
+                      "description": "Synonymous with the EntraID value. Use the JWT property to configure this provider."
+                    },
+                    {
+                      "const": "Custom",
+                      "description": "Custom authentication provider defined by the user. Use the JWT property to configure the custom provider."
+                    }
+                  ],
                   "default": "StaticWebApps"
                 },
                 "jwt": {
@@ -255,30 +316,28 @@
                     "issuer": {
                       "type": "string"
                     }
-                  }
+                  },
+                  "required": ["audience", "issuer"]
                 }
-              }
-            }
-          }
-        },
-        "log-level": {
-          "type": "object",
-          "description": "Global configuration of log level",
-          "additionalProperties": false,
-          "properties": {
-            "level": {
-              "description": "Defines logging severity levels, when in default value it will set logging level based on 'host: mode' property",
-              "type": "string",
-              "default": null,
-              "enum": [
-                "trace",
-                "debug",
-                "information",
-                "warning",
-                "error",
-                "critical",
-                "none",
-                null
+              },
+              "allOf": [
+                {
+                  "$comment": "We want the user to provide the JWT property when the provider requires it, and omit JWT when the provider does not require it.",
+                  "if": {
+                    "properties": {
+                      "provider": {
+                        "anyOf": [
+                          { "const": "EntraID" },
+                          { "const": "AzureAD" },
+                          { "const": "Custom" }
+                        ]
+                      }
+                    },
+                    "required": ["provider"]
+                  },
+                  "then": { "required": ["jwt"] },
+                  "else": { "properties": { "jwt": false } }
+                }
               ]
             }
           }
@@ -318,14 +377,88 @@
                   "default": true
                 }
               },
-              "required": [
-                "connection-string"
-              ]
+              "required": ["connection-string"]
+            },
+            "open-telemetry": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "endpoint": {
+                  "type": "string",
+                  "description": "Open Telemetry connection string"
+                },
+                "headers": {
+                  "type": "string",
+                  "description": "Open Telemetry headers"
+                },
+                "service-name": {
+                  "type": "string",
+                  "description": "Open Telemetry service name",
+                  "default": "dab"
+                },
+                "exporter-protocol": {
+                  "type": "string",
+                  "description": "Open Telemetry protocol",
+                  "default": "grpc",
+                  "enum": ["grpc", "httpprotobuf"]
+                },
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Allow enabling/disabling Open Telemetry.",
+                  "default": true
+                }
+              },
+              "required": ["endpoint"]
+            },
+            "log-level": {
+              "type": "object",
+              "description": "Global configuration of log level, defines logging severity levels for specific classes, when 'null' it will set logging level based on 'host: mode' property",
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-zA-Z_]\\w{0,}(\\.\\w{1,}){0,}$": {
+                  "description": "Only specific namespaces that are used for logging in DAB are able to be used here. The regex pattern checks that it only allows for namespace values. So it only accepts a letter as its first value, from there it accepts any alphanumeric character, each section is divided by '.' and there cannot be more than 1 '.' in a row",
+                  "type": "string",
+                  "default": null,
+                  "enum": [
+                    "trace",
+                    "debug",
+                    "information",
+                    "warning",
+                    "error",
+                    "critical",
+                    "none",
+                    null
+                  ]
+                }
+              }
             }
-          },
-          "required": [
-            "application-insights"
-          ]
+          }
+        },
+        "health": {
+          "description": "Health check configuration for runtime properties",
+          "type": [ "object", "null" ],
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable health check endpoint globally",
+              "default": true,
+              "additionalProperties": false
+            },
+            "roles": {
+              "type": "array",
+              "description": "Allowed Roles for Comprehensive Health Endpoint",
+              "items": {
+                "type": "string"
+              },
+              "default": null
+            },
+            "cache-ttl-seconds": {
+              "type": "integer",
+              "description": "Time to live in seconds for the Comprehensive Health Check Report cache entry.",
+              "default": 5
+            }
+          }
         }
       }
     },
@@ -337,6 +470,35 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "health": {
+              "description": "Health check configuration for entity",
+              "type": [ "object", "null" ],
+              "additionalProperties": false,
+              "properties": {
+                "enabled": {
+                  "type": "boolean",
+                  "description": "Enable health check endpoint for particular entity",
+                  "default": true,
+                  "additionalProperties": false
+                },
+                "first": {
+                  "type": "integer",
+                  "description": "Number of first 'x' rows to be returned in query.",
+                  "default": 100,
+                  "additionalProperties": false,
+                  "minimum": 1,
+                  "maximum": 500
+                },
+                "threshold-ms": {
+                  "type": "integer",
+                  "description": "Health Check maximum time for query to execute (in ms).",
+                  "default": 1000,
+                  "additionalProperties": false,
+                  "minimum": 1,
+                  "maximum": 2147483647
+                }
+              }
+            },
             "source": {
               "oneOf": [
                 {
@@ -350,11 +512,7 @@
                   "properties": {
                     "type": {
                       "type": "string",
-                      "enum": [
-                        "table",
-                        "view",
-                        "stored-procedure"
-                      ],
+                      "enum": ["table", "view", "stored-procedure"],
                       "description": "Database object type"
                     },
                     "object": {
@@ -388,10 +546,7 @@
                       "description": "List of fields to be used as primary keys. Mandatory field for views when generated through the CLI."
                     }
                   },
-                  "required": [
-                    "type",
-                    "object"
-                  ]
+                  "required": ["type", "object"]
                 }
               ]
             },
@@ -411,13 +566,7 @@
                       "type": "array",
                       "items": {
                         "type": "string",
-                        "enum": [
-                          "get",
-                          "post",
-                          "put",
-                          "patch",
-                          "delete"
-                        ]
+                        "enum": ["get", "post", "put", "patch", "delete"]
                       }
                     },
                     "enabled": {
@@ -428,19 +577,13 @@
                   },
                   "anyOf": [
                     {
-                      "required": [
-                        "path"
-                      ]
+                      "required": ["path"]
                     },
                     {
-                      "required": [
-                        "methods"
-                      ]
+                      "required": ["methods"]
                     },
                     {
-                      "required": [
-                        "enabled"
-                      ]
+                      "required": ["enabled"]
                     }
                   ]
                 }
@@ -460,10 +603,7 @@
                     },
                     "operation": {
                       "type": "string",
-                      "enum": [
-                        "mutation",
-                        "query"
-                      ]
+                      "enum": ["mutation", "query"]
                     },
                     "enabled": {
                       "type": "boolean",
@@ -473,19 +613,13 @@
                   },
                   "anyOf": [
                     {
-                      "required": [
-                        "type"
-                      ]
+                      "required": ["type"]
                     },
                     {
-                      "required": [
-                        "operation"
-                      ]
+                      "required": ["operation"]
                     },
                     {
-                      "required": [
-                        "enabled"
-                      ]
+                      "required": ["enabled"]
                     }
                   ]
                 }
@@ -512,10 +646,7 @@
                   "properties": {
                     "cardinality": {
                       "type": "string",
-                      "enum": [
-                        "one",
-                        "many"
-                      ]
+                      "enum": ["one", "many"]
                     },
                     "target.entity": {
                       "type": "string"
@@ -549,10 +680,7 @@
                       }
                     }
                   },
-                  "required": [
-                    "cardinality",
-                    "target.entity"
-                  ]
+                  "required": ["cardinality", "target.entity"]
                 }
               }
             },
@@ -661,10 +789,7 @@
                     }
                   }
                 },
-                "required": [
-                  "role",
-                  "actions"
-                ]
+                "required": ["role", "actions"]
               }
             }
           },
@@ -692,10 +817,7 @@
                             "oneOf": [
                               {
                                 "type": "string",
-                                "enum": [
-                                  "execute",
-                                  "*"
-                                ]
+                                "enum": ["execute", "*"]
                               },
                               {
                                 "type": "object",
@@ -703,10 +825,7 @@
                                 "properties": {
                                   "action": {
                                     "type": "string",
-                                    "enum": [
-                                      "execute",
-                                      "*"
-                                    ]
+                                    "enum": ["execute", "*"]
                                   },
                                   "fields": {
                                     "type": "object",
@@ -746,25 +865,16 @@
                     }
                   }
                 },
-                "required": [
-                  "role",
-                  "actions"
-                ]
+                "required": ["role", "actions"]
               }
             }
           },
-          "required": [
-            "source",
-            "permissions"
-          ]
+          "required": ["source", "permissions"]
         }
       }
     }
   },
-  "required": [
-    "data-source",
-    "entities"
-  ],
+  "required": ["data-source", "entities"],
   "$defs": {
     "singular-plural": {
       "oneOf": [
@@ -782,9 +892,7 @@
               "type": "string"
             }
           },
-          "required": [
-            "singular"
-          ]
+          "required": ["singular"]
         }
       ]
     },
@@ -792,12 +900,7 @@
       "oneOf": [
         {
           "type": "string",
-          "enum": [
-            "create",
-            "read",
-            "update",
-            "delete"
-          ]
+          "enum": ["create", "read", "update", "delete"]
         },
         {
           "type": "string",

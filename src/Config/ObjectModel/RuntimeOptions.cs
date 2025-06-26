@@ -10,14 +10,12 @@ public record RuntimeOptions
 {
     public RestRuntimeOptions? Rest { get; init; }
     public GraphQLRuntimeOptions? GraphQL { get; init; }
-    public HostOptions? Host { get; init; }
+    public HostOptions? Host { get; set; }
     public string? BaseRoute { get; init; }
     public TelemetryOptions? Telemetry { get; init; }
-    public EntityCacheOptions? Cache { get; init; }
+    public RuntimeCacheOptions? Cache { get; init; }
     public PaginationOptions? Pagination { get; init; }
-
-    [JsonPropertyName("log-level")]
-    public LogLevelOptions? LoggerLevel { get; init; }
+    public RuntimeHealthCheckConfig? Health { get; init; }
 
     [JsonConstructor]
     public RuntimeOptions(
@@ -26,9 +24,9 @@ public record RuntimeOptions
         HostOptions? Host,
         string? BaseRoute = null,
         TelemetryOptions? Telemetry = null,
-        EntityCacheOptions? Cache = null,
+        RuntimeCacheOptions? Cache = null,
         PaginationOptions? Pagination = null,
-        LogLevelOptions? LoggerLevel = null)
+        RuntimeHealthCheckConfig? Health = null)
     {
         this.Rest = Rest;
         this.GraphQL = GraphQL;
@@ -37,7 +35,7 @@ public record RuntimeOptions
         this.Telemetry = Telemetry;
         this.Cache = Cache;
         this.Pagination = Pagination;
-        this.LoggerLevel = LoggerLevel;
+        this.Health = Health;
     }
 
     /// <summary>
@@ -47,8 +45,24 @@ public record RuntimeOptions
     /// <returns>Whether caching is enabled globally.</returns>
     [JsonIgnore]
     [MemberNotNullWhen(true, nameof(Cache))]
-    public bool IsCachingEnabled =>
-            Cache is not null &&
-            Cache.Enabled is not null &&
-            Cache.Enabled is true;
+    public bool IsCachingEnabled => Cache?.Enabled is true;
+
+    [JsonIgnore]
+    [MemberNotNullWhen(true, nameof(Rest))]
+    public bool IsRestEnabled =>
+        Rest is null ||
+        Rest?.Enabled is null ||
+        Rest?.Enabled is true;
+
+    [JsonIgnore]
+    public bool IsGraphQLEnabled =>
+        GraphQL is null ||
+        GraphQL?.Enabled is null ||
+        GraphQL?.Enabled is true;
+
+    [JsonIgnore]
+    public bool IsHealthCheckEnabled =>
+        Health is null ||
+        Health?.Enabled is null ||
+        Health?.Enabled is true;
 }
