@@ -45,7 +45,7 @@
   "entities": {
     "BillOfLading": {
       "source": {
-        "object": "silver_ops.BillOfLading",
+        "object": "silver_ops.v_BillOfLading",
         "type": "table",
         "key-fields": [
           "systemId"
@@ -110,7 +110,7 @@
     },
     "BillOfLadingParty": {
       "source": {
-        "object": "silver_ops.BillOfLadingParty",
+        "object": "silver_ops.v_BillOfLadingParty",
         "type": "table",
         "key-fields": [
           "systemId"
@@ -617,6 +617,38 @@
         }
       ]
     },
+
+    "InvoiceSearch": {
+      "source": {
+        "object": "silver_ops.usp_invoiceSearch",
+        "type": "stored-procedure",
+        "parameters": {
+          "searchString": "string",
+          "customerScope": "string"
+        }
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "InvoiceSearch",
+          "plural": "InvoiceSearches"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "execute"
+            }
+          ]
+        }
+      ]
+    },
+
     "GlobalSearch": {
       "source": {
         "object": "silver_ops.usp_globalSearch",
@@ -2813,6 +2845,51 @@
           ]
         }
       ]
+    },
+    "DelayEvent": {
+      "source": {
+        "object": "silver_trk.ww_DelayEvent",
+        "type": "table",
+        "key-fields": [
+          "delayEventId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "DelayEvent",
+          "plural": "DelayEvents"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "ShipmentEquipment": {
+          "cardinality": "one",
+          "target.entity": "ShipmentEquipment",
+          "source.fields": [
+            "shipmentEquipmentId"
+          ],
+          "target.fields": [
+            "id"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
     },
     "TrackingEvent": {
       "source": {

@@ -128,7 +128,6 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                             QueryExecutorLogger.LogDebug($"Paramaters: {string.Join(", ", parameters.Select(param => $"{param.Key}: {param.Value?.Value} (DbType: {param.Value?.DbType}, SqlDbType: {param.Value?.SqlDbType})"))}");
                     }
 
-
                     TResult? result = ExecuteQueryAgainstDb(conn, sqltext, parameters, dataReaderHandler, httpContext, dataSourceName, args);
 
                     if (retryAttempt > 1)
@@ -203,9 +202,8 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     // When IsLateConfigured is true we are in a hosted scenario and do not reveal query information.
                     if (!ConfigProvider.IsLateConfigured)
                     {
-                      QueryExecutorLogger.LogDebug("{correlationId} {ts} Executing query: {queryText}", correlationId, DateTime.Now.ToString() , sqltext);
-
                         string correlationId = HttpContextExtensions.GetLoggerCorrelationId(httpContext);
+                        QueryExecutorLogger.LogDebug("{correlationId} {ts} Executing query: {queryText}", correlationId, DateTime.Now.ToString() , sqltext);            
                         QueryExecutorLogger.LogDebug("{correlationId} Executing query: {queryText}", correlationId, sqltext);
                     }
 
@@ -483,6 +481,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             {
                 dbDataReader.NextResult();
             }
+
             DbResultSet dbResultSet = new(resultProperties: GetResultPropertiesAsync(dbDataReader).Result ?? new());
             long availableBytes = _maxResponseSizeBytes;
             while (await ReadAsync(dbDataReader))
