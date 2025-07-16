@@ -251,5 +251,6 @@ namespace Azure.DataApiBuilder.Core.Services
             string referencedEntityName,
             [NotNullWhen(true)] out ForeignKeyDefinition? foreignKeyDefinition,
             bool isMToNRelationship) => throw new NotImplementedException();
+        public bool TryGetEntityDefenition(string entityName, out Entity? entityDefenition);
     }
 }

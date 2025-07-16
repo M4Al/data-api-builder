@@ -2,14 +2,14 @@
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0-cbl-mariner2.0. AS build
 
-
 WORKDIR /src
 COPY [".", "./"]
-RUN dotnet build "./src/Service/Azure.DataApiBuilder.Service.csproj" -c Docker -o /out -r linux-x64
+RUN dotnet build "./src/Service/Azure.DataApiBuilder.Service.csproj" -f net8.0 -o /out -r linux-x64 --self-contained
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-cbl-mariner2.0 AS runtime
 
 COPY --from=build /out /App
+
 WORKDIR /App
 ENV ASPNETCORE_URLS=http://+:5000
 ENTRYPOINT ["dotnet", "Azure.DataApiBuilder.Service.dll"]
