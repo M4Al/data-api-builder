@@ -2,7 +2,7 @@
   "$schema": "https://github.com/Azure/data-api-builder/releases/latest/download/dab.draft.schema.json",
   "data-source": {
     "database-type": "mssql",
-    "connection-string": "Data Source=nqf4kgvoqm4ufazdzriupb2pay-doa2ptopus4ufglh5rxt3is4yi.database.fabric.microsoft.com,1433;User ID=8bfaf0d6-fa20-4ed5-a450-0005ceb77729;Password=z5y8Q~hLcfdAflVrfnYoVxdavIJXZb5tlH~tAbRn;Pooling=True;Min Pool Size=0;Max Pool Size=100;Multiple Active Result Sets=False;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;Authentication=ActiveDirectoryServicePrincipal;Initial Catalog=apiLayer-fad0b3db-cb87-4a73-9c54-e1fc417bc08c",
+    "connection-string": "Data Source=nqf4kgvoqm4ufazdzriupb2pay-hmnbvxar2mgu7e3ng27fsqy3we.database.fabric.microsoft.com,1433;User ID=8bfaf0d6-fa20-4ed5-a450-0005ceb77729;Password=z5y8Q~hLcfdAflVrfnYoVxdavIJXZb5tlH~tAbRn;Pooling=True;Min Pool Size=0;Max Pool Size=100;Multiple Active Result Sets=False;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;Authentication=ActiveDirectoryServicePrincipal;Initial Catalog=apiLayer-345587c4-1232-457e-9761-b6bca3d72e2e",
     "options": {
       "set-session-context": true
     }
@@ -45,7 +45,7 @@
   "entities": {
     "BillOfLading": {
       "source": {
-        "object": "silver_ops.BillOfLading",
+        "object": "silver_ops.v_BillOfLading",
         "type": "table",
         "key-fields": [
           "systemId"
@@ -110,7 +110,7 @@
     },
     "BillOfLadingParty": {
       "source": {
-        "object": "silver_ops.BillOfLadingParty",
+        "object": "silver_ops.v_BillOfLadingParty",
         "type": "table",
         "key-fields": [
           "systemId"
@@ -1694,6 +1694,39 @@
         "ttl-seconds": 120
       }
     },
+    "geoPort": {
+      "source": {
+        "object": "silver_ops.Port",
+        "type": "table",
+        "key-fields": [
+          "Code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "geoPort",
+          "plural": "geoPorts"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
     "PurchaseDocument": {
       "source": {
         "object": "silver_ops.PurchaseDocument",
@@ -2405,6 +2438,52 @@
         }
       ]
     },
+    "TariffCarrier": {
+      "source": {
+        "object": "silver_ops.v_TariffVendors",
+        "type": "table",
+        "key-fields": [
+          "SpecificCustVendNo"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "TariffCarrier",
+          "plural": "TariffCarriers"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "Tariff": {
+          "cardinality": "many",
+          "target.entity": "Tariff",
+          "source.fields": [
+            "SpecificCustVendNo"
+          ],
+          "target.fields": [
+            "SpecificCustVendNo"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
+
     "Tariff": {
       "source": {
         "object": "silver_ops.v_Tariff",
@@ -2424,6 +2503,16 @@
         "enabled": true
       },
       "relationships": {
+        "TariffVendor": {
+          "cardinality": "one",
+          "target.entity": "TariffCarrier",
+          "source.fields": [
+            "SpecificCustVendNo"
+          ],
+          "target.fields": [
+            "SpecificCustVendNo"
+          ]
+        },
         "TariffSurcharge": {
           "cardinality": "many",
           "target.entity": "TariffSurcharge",
@@ -2846,6 +2935,51 @@
         }
       ]
     },
+    "DelayEvent": {
+      "source": {
+        "object": "silver_trk.ww_DelayEvent",
+        "type": "table",
+        "key-fields": [
+          "delayEventId"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "DelayEvent",
+          "plural": "DelayEvents"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "relationships": {
+        "ShipmentEquipment": {
+          "cardinality": "one",
+          "target.entity": "ShipmentEquipment",
+          "source.fields": [
+            "shipmentEquipmentId"
+          ],
+          "target.fields": [
+            "id"
+          ]
+        }
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 120
+      }
+    },
     "TrackingEvent": {
       "source": {
         "object": "silver_trk.v_TrackingEvent",
@@ -2932,6 +3066,14 @@
       "cache": {
         "enabled": true,
         "ttl-seconds": 120
+      },
+      "relationships": {
+        "geoPort": {
+          "cardinality": "one",
+          "target.entity": "geoPort",
+          "source.fields": [ "locode" ],
+          "target.fields": [ "Code" ]
+        }
       },
       "permissions": [
         {
