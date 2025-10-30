@@ -22,6 +22,9 @@ public record RuntimeConfig
 
     public RuntimeOptions? Runtime { get; init; }
 
+    [JsonPropertyName("azure-key-vault")]
+    public AzureKeyVaultOptions? AzureKeyVault { get; init; }
+
     public virtual RuntimeEntities Entities { get; init; }
 
     public DataSourceFiles? DataSourceFiles { get; init; }
@@ -68,6 +71,15 @@ public record RuntimeConfig
          Runtime.Rest is null ||
          Runtime.Rest.Enabled) &&
          DataSource.DatabaseType != DatabaseType.CosmosDB_NoSQL;
+
+    /// <summary>
+    /// Retrieves the value of runtime.mcp.enabled property if present, default is true.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsMcpEnabled =>
+        Runtime is null ||
+        Runtime.Mcp is null ||
+        Runtime.Mcp.Enabled;
 
     [JsonIgnore]
     public bool IsHealthEnabled =>
@@ -120,6 +132,25 @@ public record RuntimeConfig
             else
             {
                 return Runtime.GraphQL.Path;
+            }
+        }
+    }
+
+    /// <summary>
+    /// The path at which MCP API is available
+    /// </summary>
+    [JsonIgnore]
+    public string McpPath
+    {
+        get
+        {
+            if (Runtime is null || Runtime.Mcp is null || Runtime.Mcp.Path is null)
+            {
+                return McpRuntimeOptions.DEFAULT_PATH;
+            }
+            else
+            {
+                return Runtime.Mcp.Path;
             }
         }
     }
@@ -216,11 +247,13 @@ public record RuntimeConfig
         DataSource DataSource,
         RuntimeEntities Entities,
         RuntimeOptions? Runtime = null,
-        DataSourceFiles? DataSourceFiles = null)
+        DataSourceFiles? DataSourceFiles = null,
+        AzureKeyVaultOptions? AzureKeyVault = null)
     {
         this.Schema = Schema ?? DEFAULT_CONFIG_SCHEMA_LINK;
         this.DataSource = DataSource;
         this.Runtime = Runtime;
+        this.AzureKeyVault = AzureKeyVault;
         this.Entities = Entities;
         this.DefaultDataSourceName = Guid.NewGuid().ToString();
 
@@ -305,7 +338,7 @@ public record RuntimeConfig
     /// <param name="DataSourceNameToDataSource">Dictionary mapping datasourceName to datasource object.</param>
     /// <param name="EntityNameToDataSourceName">Dictionary mapping entityName to datasourceName.</param>
     /// <param name="DataSourceFiles">Datasource files which represent list of child runtimeconfigs for multi-db scenario.</param>
-    public RuntimeConfig(string Schema, DataSource DataSource, RuntimeOptions Runtime, RuntimeEntities Entities, string DefaultDataSourceName, Dictionary<string, DataSource> DataSourceNameToDataSource, Dictionary<string, string> EntityNameToDataSourceName, DataSourceFiles? DataSourceFiles = null)
+    public RuntimeConfig(string Schema, DataSource DataSource, RuntimeOptions Runtime, RuntimeEntities Entities, string DefaultDataSourceName, Dictionary<string, DataSource> DataSourceNameToDataSource, Dictionary<string, string> EntityNameToDataSourceName, DataSourceFiles? DataSourceFiles = null, AzureKeyVaultOptions? AzureKeyVault = null)
     {
         this.Schema = Schema;
         this.DataSource = DataSource;
@@ -315,6 +348,7 @@ public record RuntimeConfig
         _dataSourceNameToDataSource = DataSourceNameToDataSource;
         _entityNameToDataSourceName = EntityNameToDataSourceName;
         this.DataSourceFiles = DataSourceFiles;
+        this.AzureKeyVault = AzureKeyVault;
 
         SetupDataSourcesUsed();
     }
@@ -586,6 +620,11 @@ public record RuntimeConfig
         return (uint?)Runtime?.Pagination?.MaxPageSize ?? PaginationOptions.MAX_PAGE_SIZE;
     }
 
+    public bool NextLinkRelative()
+    {
+        return Runtime?.Pagination?.NextLinkRelative ?? false;
+    }
+
     public int MaxResponseSizeMB()
     {
         return Runtime?.Host?.MaxResponseSizeMB ?? HostOptions.MAX_RESPONSE_LENGTH_DAB_ENGINE_MB;
@@ -696,4 +735,10 @@ public record RuntimeConfig
 
         return LogLevel.Error;
     }
+
+    /// <summary>
+    /// Gets the MCP DML tools configuration
+    /// </summary>
+    [JsonIgnore]
+    public DmlToolsConfig? McpDmlTools => Runtime?.Mcp?.DmlTools;
 }

@@ -79,7 +79,8 @@ namespace Azure.DataApiBuilder.Service.Services
                         }
 
                         return ValueTask.CompletedTask;
-                    });
+                    },
+                    cleanAfter: CleanAfter.Request);
 
                 context.Result = result.Item1.Select(t => t.RootElement).ToArray();
                 SetNewMetadata(context, result.Item2);
@@ -126,7 +127,8 @@ namespace Azure.DataApiBuilder.Service.Services
                         }
 
                         return ValueTask.CompletedTask;
-                    });
+                    },
+                    cleanAfter: CleanAfter.Request);
 
                 context.Result = result.Item1.Select(t => t.RootElement).ToArray();
                 SetNewMetadata(context, result.Item2);
@@ -185,7 +187,7 @@ namespace Azure.DataApiBuilder.Service.Services
             {
                 // The selection type can be a wrapper type like NonNullType or ListType.
                 // To get the most inner type (aka the named type) we use our named type helper.
-                INamedType namedType = context.Selection.Field.Type.NamedType();
+                ITypeDefinition namedType = context.Selection.Field.Type.NamedType();
 
                 // Each scalar in HotChocolate has a runtime type representation.
                 // In order to let scalar values flow through the GraphQL type completion
@@ -313,6 +315,7 @@ namespace Azure.DataApiBuilder.Service.Services
                     result.Dispose();
                     return ValueTask.CompletedTask;
                 });
+
                 // The disposal could occur before we were finished using the value from the jsondocument,
                 // thus needing to ensure copying the root element. Hence, we clone the root element.
                 context.Result = result.RootElement.Clone();
@@ -354,14 +357,14 @@ namespace Azure.DataApiBuilder.Service.Services
         /// <param name="variables">the request context variable values needed to resolve value nodes represented as variables</param>
         public static object? ExtractValueFromIValueNode(
             IValueNode value,
-            IInputField argumentSchema,
+            IInputValueDefinition argumentSchema,
             IVariableValueCollection variables)
         {
             // extract value from the variable if the IValueNode is a variable
             if (value.Kind == SyntaxKind.Variable)
             {
                 string variableName = ((VariableNode)value).Name.Value;
-                IValueNode? variableValue = variables.GetVariable<IValueNode>(variableName);
+                IValueNode? variableValue = variables.GetValue<IValueNode>(variableName);
 
                 if (variableValue is null)
                 {
@@ -412,14 +415,14 @@ namespace Azure.DataApiBuilder.Service.Services
         /// Value: (object) argument value
         /// </returns>
         public static IDictionary<string, object?> GetParametersFromSchemaAndQueryFields(
-            IObjectField schema,
+            ObjectField schema,
             FieldNode query,
             IVariableValueCollection variables)
         {
             IDictionary<string, object?> collectedParameters = new Dictionary<string, object?>();
 
             // Fill the parameters dictionary with the default argument values
-            IFieldCollection<IInputField> schemaArguments = schema.Arguments;
+            ArgumentCollection schemaArguments = schema.Arguments;
 
             // CNEXT: This is a nasty exernal dependancy
             // Add one extra allowable parameter to schemaArgument: offset
@@ -461,7 +464,7 @@ namespace Azure.DataApiBuilder.Service.Services
             foreach (ArgumentNode argument in passedArguments)
             {
                 string argumentName = argument.Name.Value;
-                IInputField argumentSchema = schemaArguments[argumentName];
+                IInputValueDefinition argumentSchema = schemaArguments[argumentName];
 
                 object? nodeValue = ExtractValueFromIValueNode(
                             value: argument.Value,
@@ -497,7 +500,7 @@ namespace Azure.DataApiBuilder.Service.Services
             return InnerMostType(type.InnerType());
         }
 
-        public static InputObjectType InputObjectTypeFromIInputField(IInputField field)
+        public static InputObjectType InputObjectTypeFromIInputField(IInputValueDefinition field)
         {
             return (InputObjectType)InnerMostType(field.Type);
         }

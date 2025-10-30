@@ -47,6 +47,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Moq.Protected;
+using Serilog;
 using VerifyMSTest;
 using static Azure.DataApiBuilder.Config.FileSystemRuntimeConfigLoader;
 using static Azure.DataApiBuilder.Service.Tests.Configuration.ConfigurationEndpoints;
@@ -1607,11 +1608,12 @@ type Moon {
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL),
                 Options: null);
 
-            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, new(), new());
+            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, new(), new(), new());
 
             // creating an entity with invalid table name
             Entity entityWithInvalidSourceName = new(
                 Source: new("bokos", EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: null,
                 GraphQL: new(Singular: "book", Plural: "books"),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -1621,6 +1623,7 @@ type Moon {
 
             Entity entityWithInvalidSourceType = new(
                 Source: new("publishers", EntitySourceType.StoredProcedure, null, null),
+                Fields: null,
                 Rest: null,
                 GraphQL: new(Singular: "publisher", Plural: "publishers"),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_AUTHENTICATED) },
@@ -1678,11 +1681,12 @@ type Moon {
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL),
                 Options: null);
 
-            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, new(), new());
+            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, new(), new(), new());
 
             // creating an entity with invalid table name
             Entity entityWithInvalidSource = new(
                 Source: new(null, EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: null,
                 GraphQL: new(Singular: "book", Plural: "books"),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -1693,6 +1697,7 @@ type Moon {
             // creating an entity with invalid source object and adding relationship with an entity with invalid source
             Entity entityWithInvalidSourceAndRelationship = new(
                 Source: new(null, EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: null,
                 GraphQL: new(Singular: "publisher", Plural: "publishers"),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -2213,7 +2218,7 @@ type Moon {
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL),
                 Options: null);
 
-            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, new());
+            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, new(), new());
             const string CUSTOM_CONFIG = "custom-config.json";
             File.WriteAllText(CUSTOM_CONFIG, configuration.ToJson());
 
@@ -2542,7 +2547,7 @@ type Moon {
             DataSource dataSource = new(DatabaseType.MSSQL,
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
 
-            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions);
+            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, null);
             const string CUSTOM_CONFIG = "custom-config.json";
             File.WriteAllText(CUSTOM_CONFIG, configuration.ToJson());
 
@@ -2617,6 +2622,7 @@ type Moon {
         {
             GraphQLRuntimeOptions graphqlOptions = new(Enabled: true);
             RestRuntimeOptions restRuntimeOptions = new(Enabled: false);
+            McpRuntimeOptions mcpRuntimeOptions = new(Enabled: false);
 
             DataSource dataSource = new(DatabaseType.MSSQL,
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
@@ -2640,6 +2646,7 @@ type Moon {
                        new EntityPermission( Role: AuthorizationResolver.ROLE_AUTHENTICATED , Actions: new[] { readAction, createAction, deleteAction })};
 
             Entity entity = new(Source: new("stocks", EntitySourceType.Table, null, null),
+                                  Fields: null,
                                   Rest: null,
                                   GraphQL: new(Singular: "Stock", Plural: "Stocks"),
                                   Permissions: permissions,
@@ -2647,7 +2654,7 @@ type Moon {
                                   Mappings: null);
 
             string entityName = "Stock";
-            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, entity, entityName);
+            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, mcpRuntimeOptions, entity, entityName);
 
             const string CUSTOM_CONFIG = "custom-config.json";
             File.WriteAllText(CUSTOM_CONFIG, configuration.ToJson());
@@ -2918,6 +2925,7 @@ type Moon {
         {
             GraphQLRuntimeOptions graphqlOptions = new(Enabled: true);
             RestRuntimeOptions restRuntimeOptions = new(Enabled: false);
+            McpRuntimeOptions mcpRuntimeOptions = new(Enabled: false);
 
             DataSource dataSource = new(DatabaseType.MSSQL,
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
@@ -2941,6 +2949,7 @@ type Moon {
                        new EntityPermission( Role: AuthorizationResolver.ROLE_AUTHENTICATED , Actions: new[] { createAction })};
 
             Entity entity = new(Source: new("stocks", EntitySourceType.Table, null, null),
+                                  Fields: null,
                                   Rest: null,
                                   GraphQL: new(Singular: "Stock", Plural: "Stocks"),
                                   Permissions: permissions,
@@ -2948,7 +2957,7 @@ type Moon {
                                   Mappings: null);
 
             string entityName = "Stock";
-            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, entity, entityName);
+            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, mcpRuntimeOptions, entity, entityName);
 
             const string CUSTOM_CONFIG = "custom-config.json";
             File.WriteAllText(CUSTOM_CONFIG, configuration.ToJson());
@@ -3059,6 +3068,7 @@ type Moon {
 
             GraphQLRuntimeOptions graphqlOptions = new(Enabled: false);
             RestRuntimeOptions restRuntimeOptions = new(Enabled: true);
+            McpRuntimeOptions mcpRuntimeOptions = new(Enabled: false);
 
             DataSource dataSource = new(DatabaseType.MSSQL,
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
@@ -3068,6 +3078,7 @@ type Moon {
             if (entityType is EntitySourceType.StoredProcedure)
             {
                 Entity entity = new(Source: new("get_books", EntitySourceType.StoredProcedure, null, null),
+                              Fields: null,
                               Rest: new(new SupportedHttpVerb[] { SupportedHttpVerb.Get, SupportedHttpVerb.Post }),
                               GraphQL: null,
                               Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -3076,11 +3087,11 @@ type Moon {
                              );
 
                 string entityName = "GetBooks";
-                configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, entity, entityName);
+                configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, mcpRuntimeOptions, entity, entityName);
             }
             else
             {
-                configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions);
+                configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, mcpRuntimeOptions);
             }
 
             const string CUSTOM_CONFIG = "custom-config.json";
@@ -3157,6 +3168,7 @@ type Moon {
         {
             GraphQLRuntimeOptions graphqlOptions = new(Enabled: false);
             RestRuntimeOptions restRuntimeOptions = new(Enabled: true);
+            McpRuntimeOptions mcpRuntimeOptions = new(Enabled: false);
 
             DataSource dataSource = new(DatabaseType.MSSQL,
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
@@ -3166,6 +3178,7 @@ type Moon {
             if (entityType is EntitySourceType.StoredProcedure)
             {
                 Entity entity = new(Source: new("get_books", EntitySourceType.StoredProcedure, null, null),
+                              Fields: null,
                               Rest: new(new SupportedHttpVerb[] { SupportedHttpVerb.Get, SupportedHttpVerb.Post }),
                               GraphQL: null,
                               Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -3174,11 +3187,11 @@ type Moon {
                              );
 
                 string entityName = "GetBooks";
-                configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, entity, entityName);
+                configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, mcpRuntimeOptions, entity, entityName);
             }
             else
             {
-                configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions);
+                configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, mcpRuntimeOptions);
             }
 
             const string CUSTOM_CONFIG = "custom-config.json";
@@ -3187,7 +3200,7 @@ type Moon {
             HostOptions staticWebAppsHostOptions = new(null, authenticationOptions);
 
             RuntimeOptions runtimeOptions = configuration.Runtime;
-            RuntimeOptions baseRouteEnabledRuntimeOptions = new(runtimeOptions?.Rest, runtimeOptions?.GraphQL, staticWebAppsHostOptions, "/data-api");
+            RuntimeOptions baseRouteEnabledRuntimeOptions = new(runtimeOptions?.Rest, runtimeOptions?.GraphQL, runtimeOptions?.Mcp, staticWebAppsHostOptions, "/data-api");
             RuntimeConfig baseRouteEnabledConfig = configuration with { Runtime = baseRouteEnabledRuntimeOptions };
             File.WriteAllText(CUSTOM_CONFIG, baseRouteEnabledConfig.ToJson());
 
@@ -3339,6 +3352,7 @@ type Moon {
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
             Entity viewEntity = new(
                 Source: new("books_view_all", EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: new(Enabled: true),
                 GraphQL: new("", ""),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -3346,7 +3360,7 @@ type Moon {
                 Mappings: null
             );
 
-            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, new(), new(), viewEntity, "books_view_all");
+            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, new(), new(), new(), viewEntity, "books_view_all");
 
             const string CUSTOM_CONFIG = "custom-config.json";
 
@@ -3567,6 +3581,7 @@ type Planet @model(name:""PlanetAlias"") {
             RuntimeOptions runtimeOptions = new(
                 Rest: new(),
                 GraphQL: new(),
+                Mcp: new(),
                 Host: new(Cors: null, authenticationOptions, hostMode)
             );
             RuntimeConfig configWithCustomHostMode = config with { Runtime = runtimeOptions };
@@ -3607,10 +3622,11 @@ type Planet @model(name:""PlanetAlias"") {
         {
             GraphQLRuntimeOptions graphqlOptions = new(AllowIntrospection: enableIntrospection);
             RestRuntimeOptions restRuntimeOptions = new();
+            McpRuntimeOptions mcpRuntimeOptions = new();
 
             DataSource dataSource = new(DatabaseType.MSSQL, GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
 
-            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions);
+            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, mcpRuntimeOptions);
             const string CUSTOM_CONFIG = "custom-config.json";
             File.WriteAllText(CUSTOM_CONFIG, configuration.ToJson());
 
@@ -3659,6 +3675,7 @@ type Planet @model(name:""PlanetAlias"") {
         {
             GraphQLRuntimeOptions graphqlOptions = new(Enabled: globalGraphQLEnabled);
             RestRuntimeOptions restRuntimeOptions = new(Enabled: true);
+            McpRuntimeOptions mcpOptions = new(Enabled: true);
 
             DataSource dataSource = new(DatabaseType.MSSQL, GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
 
@@ -3675,6 +3692,7 @@ type Planet @model(name:""PlanetAlias"") {
 
             Entity entity = new(
                 Source: new("graphql_incompatible", EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: new(Enabled: false),
                 GraphQL: new("graphql_incompatible", "graphql_incompatibles", entityGraphQLEnabled),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -3682,7 +3700,7 @@ type Planet @model(name:""PlanetAlias"") {
                 Mappings: mappings
             );
 
-            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, entity, "graphqlNameCompat");
+            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restRuntimeOptions, mcpOptions, entity, "graphqlNameCompat");
             const string CUSTOM_CONFIG = "custom-config.json";
             File.WriteAllText(CUSTOM_CONFIG, configuration.ToJson());
 
@@ -3738,7 +3756,8 @@ type Planet @model(name:""PlanetAlias"") {
             RuntimeConfig configuration = InitMinimalRuntimeConfig(
                 dataSource: dataSource,
                 graphqlOptions: new(),
-                restOptions: new(Path: customRestPath));
+                restOptions: new(Path: customRestPath),
+                mcpOptions: new());
 
             configuration = configuration
                 with
@@ -4056,8 +4075,223 @@ type Planet @model(name:""PlanetAlias"") {
                 Runtime: new(
                     Rest: new(),
                     GraphQL: new(),
+                    Mcp: new(),
                     Host: new(null, null),
                     Telemetry: new(LoggerLevel: logLevelOptions)
+                ),
+                Entities: baseConfig.Entities
+            );
+
+            return config;
+        }
+
+#nullable enable
+
+        /// <summary>
+        /// Tests different Azure Log Analytics values to see if they are serialized and deserialized correctly to the Json config
+        /// </summary>
+        [DataTestMethod]
+        [TestCategory(TestCategory.MSSQL)]
+        [DataRow(true, "CustomTableName", "DcrImmutableId", "DceEndpoint", "TestDabLog", 1, true, "TestDabLog", 1)]
+        [DataRow(false, "", null, "", "", 10, false, "", 10)]
+        [DataRow(null, null, null, null, null, null, false, "DabLogs", 5)]
+        public void AzureLogAnalyticsSerialization(
+            bool? enabled,
+            string? customTableName,
+            string? dcrImmutableId,
+            string? dceEndpoint,
+            string? dabIdentifier,
+            int? flushIntSec,
+            bool expectedEnabled,
+            string expectedDabIdentifier,
+            int expectedFlushIntSec)
+        {
+            // Check if auth property and its values are expected to exist
+            bool expectedExistEnabled = enabled is not null;
+            bool expectedExistDabIdentifier = dabIdentifier is not null;
+            bool expectedExistFlushIntSec = flushIntSec is not null;
+            bool expectedExistCustomTableName = customTableName is not null;
+            bool expectedExistDcrImmutableId = dcrImmutableId is not null;
+            bool expectedExistDceEndpoint = dceEndpoint is not null;
+
+            AzureLogAnalyticsAuthOptions authOptions = new(customTableName, dcrImmutableId, dceEndpoint);
+            AzureLogAnalyticsOptions azureLogAnalyticsOptions = new(enabled, authOptions, dabIdentifier, flushIntSec);
+            TelemetryOptions telemetryOptions = new(AzureLogAnalytics: azureLogAnalyticsOptions);
+            RuntimeConfig configWithCustomLogLevel = InitializeRuntimeWithTelemetry(telemetryOptions);
+            string configWithCustomLogLevelJson = configWithCustomLogLevel.ToJson();
+            Assert.IsTrue(RuntimeConfigLoader.TryParseConfig(configWithCustomLogLevelJson, out RuntimeConfig? deserializedRuntimeConfig));
+
+            string serializedConfig = deserializedRuntimeConfig.ToJson();
+
+            using (JsonDocument parsedDocument = JsonDocument.Parse(serializedConfig))
+            {
+                JsonElement root = parsedDocument.RootElement;
+                JsonElement runtimeElement = root.GetProperty("runtime");
+
+                //Validate azure-log-analytics property exists in runtime
+                JsonElement telemetryElement = runtimeElement.GetProperty("telemetry");
+                bool azureLogAnalyticsPropertyExists = telemetryElement.TryGetProperty("azure-log-analytics", out JsonElement azureLogAnalyticsElement);
+                Assert.AreEqual(expected: true, actual: azureLogAnalyticsPropertyExists);
+
+                //Validate the values inside the azure-log-analytics properties are of expected value
+                bool enabledExists = azureLogAnalyticsElement.TryGetProperty("enabled", out JsonElement enabledElement);
+                Assert.AreEqual(expected: expectedExistEnabled, actual: enabledExists);
+                if (enabledExists)
+                {
+                    Assert.AreEqual(expectedEnabled, enabledElement.GetBoolean());
+                }
+
+                bool dabIdentifierExists = azureLogAnalyticsElement.TryGetProperty("dab-identifier", out JsonElement dabIdentifierElement);
+                Assert.AreEqual(expected: expectedExistDabIdentifier, actual: dabIdentifierExists);
+                if (dabIdentifierExists)
+                {
+                    Assert.AreEqual(expectedDabIdentifier, dabIdentifierElement.GetString());
+                }
+
+                bool flushIntSecExists = azureLogAnalyticsElement.TryGetProperty("flush-interval-seconds", out JsonElement flushIntSecElement);
+                Assert.AreEqual(expected: expectedExistFlushIntSec, actual: flushIntSecExists);
+                if (flushIntSecExists)
+                {
+                    Assert.AreEqual(expectedFlushIntSec, flushIntSecElement.GetInt32());
+                }
+
+                // Validate auth property exists inside of azure-log-analytics
+                bool authExists = azureLogAnalyticsElement.TryGetProperty("auth", out JsonElement authElement);
+
+                // Validate the values inside the auth properties are of expected value
+                if (authExists)
+                {
+                    bool customTableNameExists = authElement.TryGetProperty("custom-table-name", out JsonElement customTableNameElement);
+                    Assert.AreEqual(expectedExistCustomTableName, customTableNameExists);
+                    if (customTableNameExists)
+                    {
+                        Assert.AreEqual(expected: customTableName, customTableNameElement.GetString());
+                    }
+
+                    bool dcrImmutableIdExists = authElement.TryGetProperty("dcr-immutable-id", out JsonElement dcrImmutableIdElement);
+                    Assert.AreEqual(expectedExistDcrImmutableId, dcrImmutableIdExists);
+                    if (dcrImmutableIdExists)
+                    {
+                        Assert.AreEqual(expected: dcrImmutableId, dcrImmutableIdElement.GetString());
+                    }
+
+                    bool dceEndpointExists = authElement.TryGetProperty("dce-endpoint", out JsonElement dceEndpointElement);
+                    Assert.AreEqual(expectedExistDceEndpoint, dceEndpointExists);
+                    if (dceEndpointExists)
+                    {
+                        Assert.AreEqual(expected: dceEndpoint, dceEndpointElement.GetString());
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Tests different File Sink values to see if they are serialized and deserialized correctly to the Json config
+        /// </summary>
+        [DataTestMethod]
+        [TestCategory(TestCategory.MSSQL)]
+        [DataRow(true, "/file/path/exists.txt", RollingInterval.Minute, 27, 256, true, "/file/path/exists.txt", RollingInterval.Minute, 27, 256)]
+        [DataRow(true, "/test/path.csv", RollingInterval.Hour, 10, 3000, true, "/test/path.csv", RollingInterval.Hour, 10, 3000)]
+        [DataRow(false, "C://absolute/file/path.log", RollingInterval.Month, 2147483647, 2048, false, "C://absolute/file/path.log", RollingInterval.Month, 2147483647, 2048)]
+        [DataRow(false, "D://absolute/test/path.txt", RollingInterval.Year, 10, 2147483647, false, "D://absolute/test/path.txt", RollingInterval.Year, 10, 2147483647)]
+        [DataRow(false, "", RollingInterval.Infinite, 5, 512, false, "", RollingInterval.Infinite, 5, 512)]
+        [DataRow(null, null, null, null, null, false, "/logs/dab-log.txt", RollingInterval.Day, 1, 1048576)]
+        public void FileSinkSerialization(
+            bool? enabled,
+            string? path,
+            RollingInterval? rollingInterval,
+            int? retainedFileCountLimit,
+            int? fileSizeLimitBytes,
+            bool expectedEnabled,
+            string expectedPath,
+            RollingInterval expectedRollingInterval,
+            int expectedRetainedFileCountLimit,
+            int expectedFileSizeLimitBytes)
+        {
+            // Check if file values are expected to exist
+            bool isEnabledNull = enabled is null;
+            bool isPathNull = path is null;
+            bool isRollingIntervalNull = rollingInterval is null;
+            bool isRetainedFileCountLimitNull = retainedFileCountLimit is null;
+            bool isFileSizeLimitBytesNull = fileSizeLimitBytes is null;
+
+            FileSinkOptions fileOptions = new(enabled, path, rollingInterval, retainedFileCountLimit, fileSizeLimitBytes);
+            TelemetryOptions telemetryOptions = new(File: fileOptions);
+            RuntimeConfig configWithCustomLogLevel = InitializeRuntimeWithTelemetry(telemetryOptions);
+            string configWithCustomLogLevelJson = configWithCustomLogLevel.ToJson();
+            Assert.IsTrue(RuntimeConfigLoader.TryParseConfig(configWithCustomLogLevelJson, out RuntimeConfig? deserializedRuntimeConfig));
+
+            string serializedConfig = deserializedRuntimeConfig.ToJson();
+
+            using (JsonDocument parsedDocument = JsonDocument.Parse(serializedConfig))
+            {
+                JsonElement root = parsedDocument.RootElement;
+                JsonElement runtimeElement = root.GetProperty("runtime");
+
+                // Validate file property exists in runtime
+                JsonElement telemetryElement = runtimeElement.GetProperty("telemetry");
+                bool filePropertyExists = telemetryElement.TryGetProperty("file", out JsonElement fileElement);
+                Assert.AreEqual(expected: true, actual: filePropertyExists);
+
+                // Validate the values inside the file properties are of expected value
+                bool enabledExists = fileElement.TryGetProperty("enabled", out JsonElement enabledElement);
+                Assert.AreEqual(expected: !isEnabledNull, actual: enabledExists);
+                if (enabledExists)
+                {
+                    Assert.AreEqual(expectedEnabled, enabledElement.GetBoolean());
+                }
+
+                bool pathExists = fileElement.TryGetProperty("path", out JsonElement pathElement);
+                Assert.AreEqual(expected: !isPathNull, actual: pathExists);
+                if (pathExists)
+                {
+                    Assert.AreEqual(expectedPath, pathElement.GetString());
+                }
+
+                bool rollingIntervalExists = fileElement.TryGetProperty("rolling-interval", out JsonElement rollingIntervalElement);
+                Assert.AreEqual(expected: !isRollingIntervalNull, actual: rollingIntervalExists);
+                if (rollingIntervalExists)
+                {
+                    Assert.AreEqual(expectedRollingInterval.ToString(), rollingIntervalElement.GetString());
+                }
+
+                bool retainedFileCountLimitExists = fileElement.TryGetProperty("retained-file-count-limit", out JsonElement retainedFileCountLimitElement);
+                Assert.AreEqual(expected: !isRetainedFileCountLimitNull, actual: retainedFileCountLimitExists);
+                if (retainedFileCountLimitExists)
+                {
+                    Assert.AreEqual(expectedRetainedFileCountLimit, retainedFileCountLimitElement.GetInt32());
+                }
+
+                bool fileSizeLimitBytesExists = fileElement.TryGetProperty("file-size-limit-bytes", out JsonElement fileSizeLimitBytesElement);
+                Assert.AreEqual(expected: !isFileSizeLimitBytesNull, actual: fileSizeLimitBytesExists);
+                if (fileSizeLimitBytesExists)
+                {
+                    Assert.AreEqual(expectedFileSizeLimitBytes, fileSizeLimitBytesElement.GetInt32());
+                }
+            }
+        }
+
+#nullable disable
+
+        /// <summary>
+        /// Helper method to create RuntimeConfig with specified Telemetry options
+        /// </summary>
+        private static RuntimeConfig InitializeRuntimeWithTelemetry(TelemetryOptions telemetryOptions)
+        {
+            TestHelper.SetupDatabaseEnvironment(MSSQL_ENVIRONMENT);
+
+            FileSystemRuntimeConfigLoader baseLoader = TestHelper.GetRuntimeConfigLoader();
+            baseLoader.TryLoadKnownConfig(out RuntimeConfig baseConfig);
+
+            RuntimeConfig config = new(
+                Schema: baseConfig.Schema,
+                DataSource: baseConfig.DataSource,
+                Runtime: new(
+                    Rest: new(),
+                    GraphQL: new(),
+                    Mcp: new(),
+                    Host: new(null, null),
+                    Telemetry: telemetryOptions
                 ),
                 Entities: baseConfig.Entities
             );
@@ -4084,6 +4318,7 @@ type Planet @model(name:""PlanetAlias"") {
             // file creation function.
             Entity requiredEntity = new(
                 Source: new("books", EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: new(Enabled: false),
                 GraphQL: new("book", "books"),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -4145,6 +4380,7 @@ type Planet @model(name:""PlanetAlias"") {
             // config file creation.
             Entity requiredEntity = new(
                 Source: new("books", EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: new(Enabled: false),
                 GraphQL: new("book", "books"),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -4194,6 +4430,7 @@ type Planet @model(name:""PlanetAlias"") {
             // Create the entities under test.
             Entity restEnabledEntity = new(
                 Source: new("books", EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: new(Enabled: true),
                 GraphQL: new("", "", false),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -4202,6 +4439,7 @@ type Planet @model(name:""PlanetAlias"") {
 
             Entity restDisabledEntity = new(
                 Source: new("publishers", EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: new(Enabled: false),
                 GraphQL: new("publisher", "publishers", true),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -4267,9 +4505,11 @@ type Planet @model(name:""PlanetAlias"") {
         /// did not come across two $after query parameters. This addresses a customer raised issue where two $after
         /// query parameters were returned by DAB.
         /// </summary>
-        [TestMethod]
+        [DataTestMethod]
+        [DataRow(false, DisplayName = "NextLinkRelative is false")]
+        [DataRow(true, DisplayName = "NextLinkRelative is true")]
         [TestCategory(TestCategory.MSSQL)]
-        public async Task ValidateNextLinkUsage()
+        public async Task ValidateNextLinkUsage(bool isNextLinkRelative)
         {
             // Arrange - Setup test server with entity that has >1 record so that results can be paged.
             // A short cut to using an entity with >100 records is to just include the $first=1 filter
@@ -4282,6 +4522,7 @@ type Planet @model(name:""PlanetAlias"") {
             // file creation function.
             Entity requiredEntity = new(
                 Source: new("bookmarks", EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: new(Enabled: true),
                 GraphQL: new(Singular: "", Plural: "", Enabled: false),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -4293,7 +4534,21 @@ type Planet @model(name:""PlanetAlias"") {
                 { ENTITY_NAME, requiredEntity }
             };
 
-            CreateCustomConfigFile(entityMap, enableGlobalRest: true);
+            PaginationOptions paginationOptions = null;
+
+            if (isNextLinkRelative)
+            {
+                paginationOptions = new PaginationOptions
+                {
+                    DefaultPageSize = 1,
+                    MaxPageSize = 1,
+                    UserProvidedDefaultPageSize = true,
+                    UserProvidedMaxPageSize = true,
+                    NextLinkRelative = true
+                };
+            }
+
+            CreateCustomConfigFile(entityMap, enableGlobalRest: true, paginationOptions: paginationOptions);
 
             string[] args = new[]
             {
@@ -4327,7 +4582,23 @@ type Planet @model(name:""PlanetAlias"") {
             Dictionary<string, JsonElement> followNextLinkResponseProperties = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(followNextLinkResponseBody);
 
             string followUpResponseNextLink = followNextLinkResponseProperties["nextLink"].ToString();
-            Uri nextLink = new(uriString: followUpResponseNextLink);
+
+            // Build the Uri from nextLink string for query parsing.
+            // If relative, combine with base; if absolute, use as is.
+            Uri nextLink = null;
+            if (Uri.IsWellFormedUriString(followUpResponseNextLink, UriKind.Absolute))
+            {
+                nextLink = new(followUpResponseNextLink, UriKind.Absolute);
+            }
+            else if (Uri.IsWellFormedUriString(followUpResponseNextLink, UriKind.Relative))
+            {
+                nextLink = new(new("http://localhost:5000"), followUpResponseNextLink);
+            }
+            else
+            {
+                Assert.Fail($"Invalid nextLink URI format: {followUpResponseNextLink}");
+            }
+
             NameValueCollection parsedQueryParameters = HttpUtility.ParseQueryString(query: nextLink.Query);
             Assert.AreEqual(expected: false, actual: parsedQueryParameters["$after"].Contains(','), message: "nextLink erroneously contained two $after query parameters that were joined by HttpUtility.ParseQueryString(queryString).");
             Assert.AreNotEqual(notExpected: nextLinkUri, actual: followUpResponseNextLink, message: "The follow up request erroneously returned the same nextLink value.");
@@ -4340,6 +4611,115 @@ type Planet @model(name:""PlanetAlias"") {
             catch (FormatException)
             {
                 Assert.Fail(message: "$after query parameter was not a valid base64 encoded value.");
+            }
+
+            // Validate nextLink is relative if nextLinkRelative is true or false otherwise.
+            // The assertion is now done directly on the original string, not on the parsed Uri object.
+            if (isNextLinkRelative)
+            {
+                // The server returned a relative URL, so it should NOT start with http/https
+                Assert.IsFalse(Uri.IsWellFormedUriString(followUpResponseNextLink, UriKind.Absolute),
+                    $"nextLink was expected to be relative but was absolute: {followUpResponseNextLink}");
+                Assert.IsTrue(followUpResponseNextLink.StartsWith("/"),
+                    $"nextLink was expected to start with '/' (relative), got: {followUpResponseNextLink}");
+            }
+            else
+            {
+                Assert.IsTrue(Uri.IsWellFormedUriString(followUpResponseNextLink, UriKind.Absolute),
+                    $"nextLink was expected to be absolute but was relative: {followUpResponseNextLink}");
+                Assert.IsTrue(followUpResponseNextLink.StartsWith("http"),
+                    $"nextLink was expected to start with http/https, got: {followUpResponseNextLink}");
+            }
+        }
+
+        /// <summary>
+        /// Validates X-Forwarded headers for nextLink in Pagination
+        /// </summary>
+        /// <param name="forwardedHost">The X-Forwarded-Host value</param>
+        /// <param name="forwardedProto">The X-Forwarded-Proto value</param>
+        [DataTestMethod]
+        [DataRow("localhost:5000", "http", DisplayName = "Forwarded Host and HTTP Protocol")]
+        [DataRow("myhost.com", "https", DisplayName = "Forwarded Host and HTTPS Protocol")]
+        [TestCategory(TestCategory.MSSQL)]
+        public async Task ValidateNextLinkRespectsXForwardedHostAndProto(string forwardedHost, string forwardedProto)
+        {
+            // Arrange - Setup test server with entity that has >1 record so that results can be paged.
+            const string ENTITY_NAME = "Bookmark";
+
+            Entity requiredEntity = new(
+                Source: new("bookmarks", EntitySourceType.Table, null, null),
+                Fields: null,
+                Rest: new(Enabled: true),
+                GraphQL: new(Singular: "", Plural: "", Enabled: false),
+                Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
+                Relationships: null,
+                Mappings: null);
+
+            Dictionary<string, Entity> entityMap = new()
+            {
+                { ENTITY_NAME, requiredEntity }
+            };
+
+            PaginationOptions paginationOptions = new()
+            {
+                DefaultPageSize = 1,
+                MaxPageSize = 1,
+                UserProvidedDefaultPageSize = true,
+                UserProvidedMaxPageSize = true,
+                NextLinkRelative = false // Absolute nextLink required for this test
+            };
+
+            CreateCustomConfigFile(entityMap, enableGlobalRest: true, paginationOptions: paginationOptions);
+
+            string[] args = new[]
+            {
+                $"--ConfigFileName={CUSTOM_CONFIG_FILENAME}"
+            };
+
+            using TestServer server = new(Program.CreateWebHostBuilder(args));
+            using HttpClient client = server.CreateClient();
+
+            // Setup and send GET request with X-Forwarded-* headers
+            HttpRequestMessage initialPaginationRequest = new(HttpMethod.Get, $"{RestRuntimeOptions.DEFAULT_PATH}/{ENTITY_NAME}?$first=1");
+            initialPaginationRequest.Headers.Add("X-Forwarded-Host", forwardedHost);
+            initialPaginationRequest.Headers.Add("X-Forwarded-Proto", forwardedProto);
+
+            HttpResponseMessage initialPaginationResponse = await client.SendAsync(initialPaginationRequest);
+
+            // Assert
+            Assert.AreEqual(HttpStatusCode.OK, initialPaginationResponse.StatusCode, message: "Expected request to succeed.");
+
+            // Process response body and get nextLink
+            string responseBody = await initialPaginationResponse.Content.ReadAsStringAsync();
+            Dictionary<string, JsonElement> responseProperties = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(responseBody);
+            string nextLinkUri = responseProperties.ContainsKey("nextLink") ? responseProperties["nextLink"].ToString() : null;
+
+            Assert.IsNotNull(nextLinkUri, "nextLink missing in initial response.");
+
+            // Assert that nextLink uses the forwarded host and proto
+            Uri nextLink = new(nextLinkUri, UriKind.Absolute);
+
+            // Split host/port if present
+            string expectedHost;
+            int expectedPort = -1;
+            string[] hostParts = forwardedHost.Split(':');
+
+            if (hostParts.Length == 2 && int.TryParse(hostParts[1], out int port))
+            {
+                expectedHost = hostParts[0];
+                expectedPort = port;
+            }
+            else
+            {
+                expectedHost = forwardedHost;
+            }
+
+            Assert.AreEqual(forwardedProto, nextLink.Scheme, $"nextLink scheme should be '{forwardedProto}' but was '{nextLink.Scheme}'");
+            Assert.AreEqual(expectedHost, nextLink.Host, $"nextLink host should be '{expectedHost}' but was '{nextLink.Host}'");
+
+            if (expectedPort != -1)
+            {
+                Assert.AreEqual(expectedPort, nextLink.Port, $"nextLink port should be '{expectedPort}' but was '{nextLink.Port}'");
             }
         }
 
@@ -4385,7 +4765,7 @@ type Planet @model(name:""PlanetAlias"") {
             DataSource dataSource = new(DatabaseType.MSSQL,
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
 
-            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restOptions: new());
+            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restOptions: new(), mcpOptions: new());
             const string CUSTOM_CONFIG = "custom-config.json";
             File.WriteAllText(CUSTOM_CONFIG, configuration.ToJson());
 
@@ -4484,7 +4864,7 @@ type Planet @model(name:""PlanetAlias"") {
             DataSource dataSource = new(DatabaseType.MSSQL,
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
 
-            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restOptions: new());
+            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restOptions: new(), mcpOptions: new());
             const string CUSTOM_CONFIG = "custom-config.json";
             File.WriteAllText(CUSTOM_CONFIG, configuration.ToJson());
 
@@ -4567,7 +4947,7 @@ type Planet @model(name:""PlanetAlias"") {
             DataSource dataSource = new(DatabaseType.MSSQL,
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
 
-            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restOptions: new());
+            RuntimeConfig configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions, restOptions: new(), mcpOptions: new());
             const string CUSTOM_CONFIG = "custom-config.json";
             File.WriteAllText(CUSTOM_CONFIG, configuration.ToJson());
 
@@ -4616,22 +4996,33 @@ type Planet @model(name:""PlanetAlias"") {
         /// </summary>
         /// <param name="entityMap">Collection of entityName -> Entity object.</param>
         /// <param name="enableGlobalRest">flag to enable or disabled REST globally.</param>
-        private static void CreateCustomConfigFile(Dictionary<string, Entity> entityMap, bool enableGlobalRest = true)
+        /// <param name="paginationOptions">Optional pagination options to use in the runtime config.</param>
+        private static void CreateCustomConfigFile(Dictionary<string, Entity> entityMap, bool enableGlobalRest = true, PaginationOptions paginationOptions = null)
         {
             DataSource dataSource = new(
                 DatabaseType.MSSQL,
                 GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL),
                 Options: null);
+
             HostOptions hostOptions = new(Cors: null, Authentication: new() { Provider = nameof(EasyAuthType.StaticWebApps) });
+
+            RuntimeOptions runtime = paginationOptions != null
+                ? new(
+                    Rest: new(Enabled: enableGlobalRest),
+                    GraphQL: new(Enabled: true),
+                    Mcp: new(Enabled: true),
+                    Host: hostOptions,
+                    Pagination: paginationOptions)
+                : new(
+                    Rest: new(Enabled: enableGlobalRest),
+                    GraphQL: new(Enabled: true),
+                    Mcp: new(Enabled: true),
+                    Host: hostOptions);
 
             RuntimeConfig runtimeConfig = new(
                 Schema: string.Empty,
                 DataSource: dataSource,
-                Runtime: new(
-                    Rest: new(Enabled: enableGlobalRest),
-                    GraphQL: new(Enabled: true),
-                    Host: hostOptions
-                ),
+                Runtime: runtime,
                 Entities: new(entityMap));
 
             File.WriteAllText(
@@ -4949,6 +5340,8 @@ type Planet @model(name:""PlanetAlias"") {
 
             RestRuntimeOptions restRuntimeOptions = new(Enabled: false);
 
+            McpRuntimeOptions mcpRuntimeOptions = new(Enabled: false);
+
             DataSource dataSource = new(DatabaseType.MSSQL, GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
 
             EntityAction createAction = new(
@@ -4972,6 +5365,7 @@ type Planet @model(name:""PlanetAlias"") {
                                                       LinkingTargetFields: null);
 
             Entity bookEntity = new(Source: new("books", EntitySourceType.Table, null, null),
+                                    Fields: null,
                                     Rest: null,
                                     GraphQL: new(Singular: "book", Plural: "books"),
                                     Permissions: permissions,
@@ -4995,6 +5389,7 @@ type Planet @model(name:""PlanetAlias"") {
 
             Entity publisherEntity = new(
                 Source: new("publishers", EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: null,
                 GraphQL: new(Singular: "publisher", Plural: "publishers"),
                 Permissions: permissions,
@@ -5007,7 +5402,7 @@ type Planet @model(name:""PlanetAlias"") {
 
             RuntimeConfig runtimeConfig = new(Schema: "IntegrationTestMinimalSchema",
                                               DataSource: dataSource,
-                                              Runtime: new(restRuntimeOptions, graphqlOptions, Host: new(Cors: null, Authentication: authenticationOptions, Mode: HostMode.Development), Cache: null),
+                                              Runtime: new(restRuntimeOptions, graphqlOptions, mcpRuntimeOptions, Host: new(Cors: null, Authentication: authenticationOptions, Mode: HostMode.Development), Cache: null),
                                               Entities: new(entityMap));
             return runtimeConfig;
         }
@@ -5020,6 +5415,7 @@ type Planet @model(name:""PlanetAlias"") {
             DataSource dataSource,
             GraphQLRuntimeOptions graphqlOptions,
             RestRuntimeOptions restOptions,
+            McpRuntimeOptions mcpOptions,
             Entity entity = null,
             string entityName = null,
             RuntimeCacheOptions cacheOptions = null
@@ -5027,6 +5423,7 @@ type Planet @model(name:""PlanetAlias"") {
         {
             entity ??= new(
                 Source: new("books", EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: null,
                 GraphQL: new(Singular: "book", Plural: "books"),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -5044,6 +5441,7 @@ type Planet @model(name:""PlanetAlias"") {
             // Adding an entity with only Authorized Access
             Entity anotherEntity = new(
                 Source: new("publishers", EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: null,
                 GraphQL: new(Singular: "publisher", Plural: "publishers"),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_AUTHENTICATED) },
@@ -5057,7 +5455,7 @@ type Planet @model(name:""PlanetAlias"") {
             return new(
                 Schema: "IntegrationTestMinimalSchema",
                 DataSource: dataSource,
-                Runtime: new(restOptions, graphqlOptions,
+                Runtime: new(restOptions, graphqlOptions, mcpOptions,
                     Host: new(Cors: null, Authentication: authenticationOptions, Mode: HostMode.Development),
                     Cache: cacheOptions
                 ),
@@ -5133,6 +5531,7 @@ type Planet @model(name:""PlanetAlias"") {
                 Runtime: new(
                     Rest: new(),
                     GraphQL: new(),
+                    Mcp: new(),
                     Host: new(null, null)
                 ),
                 Entities: new(new Dictionary<string, Entity>())
@@ -5150,6 +5549,7 @@ type Planet @model(name:""PlanetAlias"") {
         {
             Entity entity = new(
                 Source: new("books", EntitySourceType.Table, null, null),
+                Fields: null,
                 Rest: null,
                 GraphQL: new(Singular: "book", Plural: "books"),
                 Permissions: new[] { GetMinimalPermissionConfig(AuthorizationResolver.ROLE_ANONYMOUS) },
@@ -5170,6 +5570,7 @@ type Planet @model(name:""PlanetAlias"") {
                 Runtime: new(
                     Rest: new(),
                     GraphQL: new(),
+                    Mcp: new(),
                     Host: new(Cors: null, Authentication: authenticationOptions)
                 ),
                 Entities: new(entityMap)

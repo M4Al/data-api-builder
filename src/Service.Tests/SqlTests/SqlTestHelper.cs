@@ -191,18 +191,18 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests
             if (message is not null)
             {
                 Console.WriteLine(response);
-                Assert.IsTrue(response.Contains(message), $"Message \"{message}\" not found in error");
+                Assert.IsTrue(response.Contains(message), $"Message \"{message}\" not found in error {response}");
             }
 
             if (statusCode != null)
             {
-                Assert.IsTrue(response.Contains($"\"code\":\"{statusCode}\""), $"Status code \"{statusCode}\" not found in error");
+                Assert.IsTrue(response.Contains($"\"code\":\"{statusCode}\""), $"Status code \"{statusCode}\" not found in error {response}");
             }
 
             if (path is not null)
             {
                 Console.WriteLine(response);
-                Assert.IsTrue(response.Contains(path), $"Path \"{path}\" not found in error");
+                Assert.IsTrue(response.Contains(path), $"Path \"{path}\" not found in error {response}");
             }
         }
 
@@ -389,6 +389,7 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests
                 Runtime: new(
                     Rest: new(),
                     GraphQL: new(),
+                    Mcp: new(),
                     Host: new(Cors: null, Authentication: authenticationOptions)
                 ),
                 Entities: new(new Dictionary<string, Entity>())

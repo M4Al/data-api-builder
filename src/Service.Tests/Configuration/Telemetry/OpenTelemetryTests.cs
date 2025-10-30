@@ -12,7 +12,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using static Azure.DataApiBuilder.Service.Tests.Configuration.ConfigurationTests;
 
-namespace Azure.DataApiBuilder.Service.Tests.Configuration;
+namespace Azure.DataApiBuilder.Service.Tests.Configuration.Telemetry;
 
 /// <summary>
 /// Contains tests for OpenTelemetry functionality.
@@ -37,7 +37,7 @@ public class OpenTelemetryTests
         DataSource dataSource = new(DatabaseType.MSSQL,
             GetConnectionStringFromEnvironmentConfig(environment: TestCategory.MSSQL), Options: null);
 
-        _configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions: new(), restOptions: new());
+        _configuration = InitMinimalRuntimeConfig(dataSource, graphqlOptions: new(), restOptions: new(), mcpOptions: new());
 
         TelemetryOptions _testTelemetryOptions = new(OpenTelemetry: new OpenTelemetryOptions(isOtelEnabled, otelEndpoint, otelHeaders, otlpExportProtocol, "TestServiceName"));
         _configuration = _configuration with { Runtime = _configuration.Runtime with { Telemetry = _testTelemetryOptions } };
