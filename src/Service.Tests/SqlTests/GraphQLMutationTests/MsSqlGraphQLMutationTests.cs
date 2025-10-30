@@ -96,10 +96,55 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLMutationTests
                     WITHOUT_ARRAY_WRAPPER
             ";
 
+            string graphqlMutationName = "createPublisher";
+            string graphQLMutationPayload = @"
+                mutation {
+                    createPublisher(item: { name: ""New publisher"" }) {
+                        id
+                        name
+                    }
+                }
+            ";
+
             await InsertMutationFailingDatabasePolicy(
                 dbQuery: msSqlQuery,
                 errorMessage: errorMessage,
-                roleName: "database_policy_tester");
+                roleName: "database_policy_tester",
+                graphQLMutationName: graphqlMutationName,
+                graphQLMutationPayload: graphQLMutationPayload);
+        }
+
+        /// <summary>
+        /// <code>Do: </code> Inserts new Publisher with name = 'Not New publisher'
+        /// <code>Check: </code> Mutation succeeds because the database policy (@item.name ne 'New publisher') is passed
+        /// </summary>
+        [TestMethod]
+        public async Task InsertMutationWithDatabasePolicy()
+        {
+            string msSqlQuery = @"
+                SELECT COUNT(*) AS [count]
+                   FROM [publishers]
+                WHERE [name] = 'Not New publisher'
+                FOR JSON PATH,
+                    INCLUDE_NULL_VALUES,
+                    WITHOUT_ARRAY_WRAPPER
+            ";
+
+            string graphqlMutationName = "createPublisher";
+            string graphQLMutationPayload = @"
+                mutation {
+                    createPublisher(item: { name: ""Not New publisher"" }) {
+                        id
+                        name
+                    }
+                }
+            ";
+
+            await InsertMutationWithDatabasePolicy(
+                dbQuery: msSqlQuery,
+                roleName: "database_policy_tester",
+                graphQLMutationName: graphqlMutationName,
+                graphQLMutationPayload: graphQLMutationPayload);
         }
 
         /// <summary>
@@ -780,6 +825,31 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLMutationTests
             ";
 
             await InsertIntoInsertableComplexView(msSqlQuery);
+        }
+
+        /// <summary>
+        /// <code>Do: </code> create an entry with a type Float
+        /// <code>Check: </code> that the type Float of new entry can be correctly viewed in different regional format settings
+        /// </summary>
+        [TestMethod]
+        [DataRow("en-US")]
+        [DataRow("en-DE")]
+        public async Task CanCreateItemWithCultureInvariant(string cultureInfo)
+        {
+            string msSqlQuery = @"
+                SELECT TOP 1 [table0].[id] AS [id],
+                    [table0].[item_name] AS [item_name],
+                    [table0].[subtotal] AS [subtotal],
+                    [table0].[tax] AS [tax]
+                FROM [dbo].[sales] AS [table0]
+                WHERE [table0].[item_name] = 'test_name'
+                ORDER BY [table0].[id] ASC
+                FOR JSON PATH,
+                    INCLUDE_NULL_VALUES,
+                    WITHOUT_ARRAY_WRAPPER
+            ";
+
+            await CanCreateItemWithCultureInvariant(cultureInfo, msSqlQuery);
         }
 
         /// <summary>

@@ -50,7 +50,7 @@ namespace Azure.DataApiBuilder.Service.Tests.GraphQLBuilder
             Mock<IQueryEngineFactory> queryEngineFactory = new();
             Mock<IMutationEngineFactory> mutationEngineFactory = new();
             Mock<ILogger<ISqlMetadataProvider>> logger = new();
-            IMetadataProviderFactory metadataProviderFactory = new MetadataProviderFactory(provider, queryManagerfactory.Object, logger.Object, fs);
+            IMetadataProviderFactory metadataProviderFactory = new MetadataProviderFactory(provider, queryManagerfactory.Object, logger.Object, fs, handler: null);
             Mock<IAuthorizationResolver> authResolver = new();
 
             GraphQLSchemaCreator creator = new(provider, queryEngineFactory.Object, mutationEngineFactory.Object, metadataProviderFactory, authResolver.Object);
@@ -60,7 +60,7 @@ namespace Azure.DataApiBuilder.Service.Tests.GraphQLBuilder
             Assert.IsNotNull(inputTypeObjects);
             Assert.AreEqual(9, inputTypeObjects.Count, $"{nameof(InputObjectTypeDefinitionNode)} is invalid. input Type objects have not been created correctly.");
 
-            // 9 input types generated for the 3 entity types in the schema.gql. IntFilter,StringFilter etc should not be duplicated.
+            // 11 input types generated for the 3 entity types in the schema.gql. IntFilter,StringFilter etc should not be duplicated.
             Assert.AreEqual(13, root.Definitions.Count, $"{nameof(DocumentNode)}:Root is invalid. root definitions count does not match expected count.");
         }
     }

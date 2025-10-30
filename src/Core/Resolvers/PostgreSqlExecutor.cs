@@ -3,6 +3,7 @@
 
 using System.Data.Common;
 using Azure.Core;
+using Azure.DataApiBuilder.Config;
 using Azure.DataApiBuilder.Config.ObjectModel;
 using Azure.DataApiBuilder.Core.Configurations;
 using Azure.DataApiBuilder.Core.Models;
@@ -30,9 +31,9 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         /// from the configuration controller.
         /// Key: datasource name, Value: access token for this datasource.
         /// </summary>
-        private readonly Dictionary<string, string?> _accessTokensFromConfiguration;
+        private Dictionary<string, string?> _accessTokensFromConfiguration;
 
-        public DefaultAzureCredential AzureCredential { get; set; } = new();
+        public DefaultAzureCredential AzureCredential { get; set; } = new(); // CodeQL [SM05137]: DefaultAzureCredential will use Managed Identity if available or fallback to default.
 
         /// <summary>
         /// The PostgreSql specific connection string builders.
@@ -52,25 +53,38 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         /// </summary>
         private Dictionary<string, bool> _dataSourceAccessTokenUsage;
 
+        private readonly RuntimeConfigProvider _runtimeConfigProvider;
+
         public PostgreSqlQueryExecutor(
             RuntimeConfigProvider runtimeConfigProvider,
             DbExceptionParser dbExceptionParser,
             ILogger<IQueryExecutor> logger,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            HotReloadEventHandler<HotReloadEventArgs>? handler = null)
             : base(dbExceptionParser,
                   logger,
                   runtimeConfigProvider,
-                  httpContextAccessor)
+                  httpContextAccessor,
+                  handler)
         {
-            IEnumerable<KeyValuePair<string, DataSource>> postgresqldbs = runtimeConfigProvider.GetConfig().GetDataSourceNamesToDataSourcesIterator().Where(x => x.Value.DatabaseType == DatabaseType.PostgreSQL);
             _dataSourceAccessTokenUsage = new Dictionary<string, bool>();
             _accessTokensFromConfiguration = runtimeConfigProvider.ManagedIdentityAccessToken;
+            _runtimeConfigProvider = runtimeConfigProvider;
+            ConfigurePostgreSqlQueryExecutor();
+        }
+
+        /// <summary>
+        /// Configure during construction or a hot-reload scenario.
+        /// </summary>
+        private void ConfigurePostgreSqlQueryExecutor()
+        {
+            IEnumerable<KeyValuePair<string, DataSource>> postgresqldbs = _runtimeConfigProvider.GetConfig().GetDataSourceNamesToDataSourcesIterator().Where(x => x.Value.DatabaseType == DatabaseType.PostgreSQL);
 
             foreach ((string dataSourceName, DataSource dataSource) in postgresqldbs)
             {
                 NpgsqlConnectionStringBuilder builder = new(dataSource.ConnectionString);
 
-                if (runtimeConfigProvider.IsLateConfigured)
+                if (_runtimeConfigProvider.IsLateConfigured)
                 {
                     builder.SslMode = SslMode.VerifyFull;
                 }

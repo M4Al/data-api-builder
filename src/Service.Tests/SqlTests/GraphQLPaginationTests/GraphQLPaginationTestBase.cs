@@ -84,70 +84,100 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLPaginationTests
                 }
             }";
 
+            string expected = @"{
+                ""items"": [
+                {
+                    ""id"": 1,
+                    ""title"": ""Awesome book""
+                },
+                {
+                    ""id"": 2,
+                    ""title"": ""Also Awesome book""
+                },
+                {
+                    ""id"": 3,
+                    ""title"": ""Great wall of china explained""
+                },
+                {
+                    ""id"": 4,
+                    ""title"": ""US history in a nutshell""
+                },
+                {
+                    ""id"": 5,
+                    ""title"": ""Chernobyl Diaries""
+                },
+                {
+                    ""id"": 6,
+                    ""title"": ""The Palace Door""
+                },
+                {
+                    ""id"": 7,
+                    ""title"": ""The Groovy Bar""
+                },
+                {
+                    ""id"": 8,
+                    ""title"": ""Time to Eat""
+                },
+                {
+                    ""id"": 9,
+                    ""title"": ""Policy-Test-01""
+                },
+                {
+                    ""id"": 10,
+                    ""title"": ""Policy-Test-02""
+                },
+                {
+                    ""id"": 11,
+                    ""title"": ""Policy-Test-04""
+                },
+                {
+                    ""id"": 12,
+                    ""title"": ""Time to Eat 2""
+                },
+                {
+                    ""id"": 13,
+                    ""title"": ""Before Sunrise""
+                },
+                {
+                    ""id"": 14,
+                    ""title"": ""Before Sunset""
+                },
+                {
+                    ""id"": 15,
+                    ""title"": ""SQL_CONN""
+                },
+                {
+                    ""id"": 16,
+                    ""title"": ""SOME%CONN""
+                },
+                {
+                    ""id"": 17,
+                    ""title"": ""CONN%_CONN""
+                },
+                {
+                    ""id"": 18,
+                    ""title"": ""[Special Book]""
+                },
+                {
+                    ""id"": 19,
+                    ""title"": ""ME\\YOU""
+                },
+                {
+                    ""id"": 20,
+                    ""title"": ""C:\\\\LIFE""
+                },
+                {
+                    ""id"": 21,
+                    ""title"": """"
+                }
+                ],
+                ""endCursor"": null,
+                ""hasNextPage"": false
+            }";
+
+            // Note: The max page size is 21 for MsSql and 20 for all other data sources, so when using -1
             // this resultset represents all books in the db.
             JsonElement actual = await ExecuteGraphQLRequestAsync(graphQLQuery, graphQLQueryName, isAuthenticated: false);
-            string expected = @"{
-              ""items"": [
-                {
-                  ""id"": 1,
-                  ""title"": ""Awesome book""
-                },
-                {
-                  ""id"": 2,
-                  ""title"": ""Also Awesome book""
-                },
-                {
-                  ""id"": 3,
-                  ""title"": ""Great wall of china explained""
-                },
-                {
-                  ""id"": 4,
-                  ""title"": ""US history in a nutshell""
-                },
-                {
-                  ""id"": 5,
-                  ""title"": ""Chernobyl Diaries""
-                },
-                {
-                  ""id"": 6,
-                  ""title"": ""The Palace Door""
-                },
-                {
-                  ""id"": 7,
-                  ""title"": ""The Groovy Bar""
-                },
-                {
-                  ""id"": 8,
-                  ""title"": ""Time to Eat""
-                },
-                {
-                  ""id"": 9,
-                  ""title"": ""Policy-Test-01""
-                },
-                {
-                  ""id"": 10,
-                  ""title"": ""Policy-Test-02""
-                },
-                {
-                  ""id"": 11,
-                  ""title"": ""Policy-Test-04""
-                },
-                {
-                  ""id"": 12,
-                  ""title"": ""Time to Eat 2""
-                },
-                {
-                  ""id"": 13,
-                  ""title"": ""Before Sunrise""
-                },
-                {
-                  ""id"": 14,
-                  ""title"": ""Before Sunset""
-                }
-              ],
-              ""endCursor"": null,
-              ""hasNextPage"": false
-            }";
 
             SqlTestHelper.PerformTestEqualJsonStrings(expected, actual.ToString());
         }
@@ -172,67 +202,96 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLPaginationTests
             }";
 
             JsonElement actual = await ExecuteGraphQLRequestAsync(graphQLQuery, graphQLQueryName, isAuthenticated: false);
+
             string expected = @"{
-              ""items"": [
+                ""items"": [
                 {
-                  ""id"": 1,
-                  ""title"": ""Awesome book""
+                    ""id"": 1,
+                    ""title"": ""Awesome book""
                 },
                 {
-                  ""id"": 2,
-                  ""title"": ""Also Awesome book""
+                    ""id"": 2,
+                    ""title"": ""Also Awesome book""
                 },
                 {
-                  ""id"": 3,
-                  ""title"": ""Great wall of china explained""
+                    ""id"": 3,
+                    ""title"": ""Great wall of china explained""
                 },
                 {
-                  ""id"": 4,
-                  ""title"": ""US history in a nutshell""
+                    ""id"": 4,
+                    ""title"": ""US history in a nutshell""
                 },
                 {
-                  ""id"": 5,
-                  ""title"": ""Chernobyl Diaries""
+                    ""id"": 5,
+                    ""title"": ""Chernobyl Diaries""
                 },
                 {
-                  ""id"": 6,
-                  ""title"": ""The Palace Door""
+                    ""id"": 6,
+                    ""title"": ""The Palace Door""
                 },
                 {
-                  ""id"": 7,
-                  ""title"": ""The Groovy Bar""
+                    ""id"": 7,
+                    ""title"": ""The Groovy Bar""
                 },
                 {
-                  ""id"": 8,
-                  ""title"": ""Time to Eat""
+                    ""id"": 8,
+                    ""title"": ""Time to Eat""
                 },
                 {
-                  ""id"": 9,
-                  ""title"": ""Policy-Test-01""
+                    ""id"": 9,
+                    ""title"": ""Policy-Test-01""
                 },
                 {
-                  ""id"": 10,
-                  ""title"": ""Policy-Test-02""
+                    ""id"": 10,
+                    ""title"": ""Policy-Test-02""
                 },
                 {
-                  ""id"": 11,
-                  ""title"": ""Policy-Test-04""
+                    ""id"": 11,
+                    ""title"": ""Policy-Test-04""
                 },
                 {
-                  ""id"": 12,
-                  ""title"": ""Time to Eat 2""
+                    ""id"": 12,
+                    ""title"": ""Time to Eat 2""
                 },
                 {
-                  ""id"": 13,
-                  ""title"": ""Before Sunrise""
+                    ""id"": 13,
+                    ""title"": ""Before Sunrise""
                 },
                 {
-                  ""id"": 14,
-                  ""title"": ""Before Sunset""
+                    ""id"": 14,
+                    ""title"": ""Before Sunset""
+                },
+                {
+                    ""id"": 15,
+                    ""title"": ""SQL_CONN""
+                },
+                {
+                    ""id"": 16,
+                    ""title"": ""SOME%CONN""
+                },
+                {
+                    ""id"": 17,
+                    ""title"": ""CONN%_CONN""
+                },
+                {
+                    ""id"": 18,
+                    ""title"": ""[Special Book]""
+                },
+                {
+                    ""id"": 19,
+                    ""title"": ""ME\\YOU""
+                },
+                {
+                    ""id"": 20,
+                    ""title"": ""C:\\\\LIFE""
+                },
+                {
+                    ""id"": 21,
+                    ""title"": """"
                 }
-              ],
-              ""endCursor"": null,
-              ""hasNextPage"": false
+                ],
+                ""endCursor"": null,
+                ""hasNextPage"": false
             }";
 
             SqlTestHelper.PerformTestEqualJsonStrings(expected, actual.ToString());
@@ -930,6 +989,75 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLPaginationTests
             }";
 
             SqlTestHelper.PerformTestEqualJsonStrings(expected2, actual2.ToString());
+        }
+
+        /// <summary>
+        /// Tests the GraphQL query for retrieving supported types with a specified number of rows.
+        /// Also verifies the hasNextPage and endCursor fields in the response.
+        /// This test is a 'best effort' attempt to reproduce an issue that occurs due to JsonDocument disposal
+        /// occurring before its values are fully utilized. As a result, this test attempts to catch circumstances
+        /// where JsonDocument.RootElement.Clone() is not called.
+        /// </summary>
+        /// <param name="pageSize">The number of rows to retrieve in the query.</param>
+        /// <param name="fields">The fields to retrieve in the query.</param>
+        /// <param name="setupQuery">The query to setup the database for the test.</param>
+        /// <param name="cleanupQuery">The query to cleanup the database after the test.</param>
+        protected async Task TestPaginantionForGivenPageSize(int pageSize, string fields, string setupQuery, string cleanupQuery)
+        {
+            // Setup for pagination adding 100 rows to the database
+            await GetDatabaseResultAsync(setupQuery);
+
+            // Arrange
+            string graphQLQueryName = "supportedTypes";
+            string graphQLQuery = $@"{{
+                supportedTypes(first: {pageSize}, after: null) {{
+                    items {{
+                        {fields}
+                    }}
+                    hasNextPage
+                    endCursor
+                }}
+            }}";
+
+            // Act
+            JsonElement graphQLResponse = await ExecuteGraphQLRequestAsync(graphQLQuery, graphQLQueryName, isAuthenticated: true);
+
+            // Assert
+            Assert.IsNotNull(graphQLResponse);
+
+            // Check for no errors
+            Assert.IsFalse(graphQLResponse.TryGetProperty("errors", out _), "Response contains errors");
+
+            // Check the number of items
+            // Total number of rows in DB < 200, so when the pagesize exceeds 200, the number of rows returned in the result
+            // will be less than the pagesize.
+            JsonElement items = graphQLResponse.GetProperty("items");
+            Assert.AreEqual(items.GetArrayLength() == pageSize, pageSize <= 200);
+            Assert.AreEqual(items.GetArrayLength() < pageSize, pageSize > 200);
+
+            // Verify each item has all the requested fields.
+            foreach (JsonElement item in items.EnumerateArray())
+            {
+                foreach (string field in fields.Split(','))
+                {
+                    Assert.IsTrue(item.TryGetProperty(field.Trim(), out _), $"Item does not contain {field.Trim()}");
+                }
+            }
+
+            // Verify hasNextPage field
+            // Since number of rows in DB<200, if pagesize provided exceeds 200, hasNextPage should be false.
+            JsonElement hasNextPage = graphQLResponse.GetProperty("hasNextPage");
+            Assert.AreNotEqual(JsonValueKind.Null, hasNextPage.ValueKind, "hasNextPage is null");
+            bool expectedHasNextPageValue = pageSize < 200 ? true : false;
+            Assert.AreEqual(expectedHasNextPageValue, hasNextPage.GetBoolean(), "hasNextPage is not true");
+
+            // Verify endCursor field
+            JsonElement endCursor = graphQLResponse.GetProperty("endCursor");
+            JsonValueKind expectedEndCursorType = hasNextPage.GetBoolean() ? JsonValueKind.String : JsonValueKind.Null;
+            Assert.AreEqual(expectedEndCursorType, endCursor.ValueKind, "endCursor is null");
+
+            // Clean up: Delete the inserted records
+            await GetDatabaseResultAsync(cleanupQuery);
         }
 
         #endregion

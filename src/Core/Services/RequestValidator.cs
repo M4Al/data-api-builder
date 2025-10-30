@@ -9,6 +9,7 @@ using Azure.DataApiBuilder.Core.Configurations;
 using Azure.DataApiBuilder.Core.Models;
 using Azure.DataApiBuilder.Core.Services.MetadataProviders;
 using Azure.DataApiBuilder.Service.Exceptions;
+using KeyNotFoundException = System.Collections.Generic.KeyNotFoundException;
 
 namespace Azure.DataApiBuilder.Core.Services
 {
@@ -135,21 +136,16 @@ namespace Azure.DataApiBuilder.Core.Services
             ISqlMetadataProvider sqlMetadataProvider = GetSqlMetadataProvider(spRequestCtx.EntityName);
             StoredProcedureDefinition storedProcedureDefinition =
                 TryGetStoredProcedureDefinition(spRequestCtx.EntityName, sqlMetadataProvider);
-
-            HashSet<string> missingFields = new();
             HashSet<string> extraFields = new(spRequestCtx.ResolvedParameters.Keys);
             foreach ((string paramKey, ParameterDefinition paramDefinition) in storedProcedureDefinition.Parameters)
             {
-                // If parameter not specified in request OR config
-                if (!spRequestCtx.ResolvedParameters!.ContainsKey(paramKey)
-                    && !paramDefinition.HasConfigDefault)
-                {
-                    // Ideally should check if a default is set in sql, but no easy way to do so - would have to parse procedure's object definition
-                    // See https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-parameters-transact-sql?view=sql-server-ver16#:~:text=cursor%2Dreference%20parameter.-,has_default_value,-bit
-                    // For SQL Server not populating this metadata for us; MySQL doesn't seem to allow parameter defaults so not relevant. 
-                    missingFields.Add(paramKey);
-                }
-                else
+                // If a required stored procedure parameter value is missing in the request and
+                // the runtime config doesn't define default value, the request is invalid.
+                // Ideally should check if a default is set in sql, but no easy way to do so - would have to parse procedure's object definition
+                // See https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-parameters-transact-sql?view=sql-server-ver16#:~:text=cursor%2Dreference%20parameter.-,has_default_value,-bit
+                // For SQL Server not populating this metadata for us; MySQL doesn't seem to allow parameter defaults so not relevant.
+                if (spRequestCtx.ResolvedParameters!.ContainsKey(paramKey)
+                    || paramDefinition.HasConfigDefault)
                 {
                     extraFields.Remove(paramKey);
                 }
@@ -166,17 +162,6 @@ namespace Azure.DataApiBuilder.Core.Services
                     statusCode: HttpStatusCode.BadRequest,
                     subStatusCode: DataApiBuilderException.SubStatusCodes.BadRequest);
             }
-
-            // If missing a parameter in the request and do not have a default specified in config
-            if (missingFields.Count > 0)
-            {
-                throw new DataApiBuilderException(
-                    message: $"Invalid request. Missing required procedure parameters: {string.Join(", ", missingFields)}" +
-                                $" for entity: {spRequestCtx.EntityName}",
-                    statusCode: HttpStatusCode.BadRequest,
-                    subStatusCode: DataApiBuilderException.SubStatusCodes.BadRequest);
-            }
-
         }
 
         /// <summary>
@@ -338,7 +323,8 @@ namespace Azure.DataApiBuilder.Core.Services
                 if (ValidateColumn(column.Value,
                                    exposedName!,
                                    fieldsInRequestBody,
-                                   isReplacementUpdate: true))
+                                   isReplacementUpdate: true,
+                                   isRequestBodyStrict))
                 {
                     unvalidatedFields.Remove(exposedName!);
                 }
@@ -421,7 +407,7 @@ namespace Azure.DataApiBuilder.Core.Services
                 }
 
                 bool isReplacementUpdate = (upsertRequestCtx.OperationType == EntityActionOperation.Upsert) ? true : false;
-                if (ValidateColumn(column.Value, exposedName!, fieldsInRequestBody, isReplacementUpdate))
+                if (ValidateColumn(column.Value, exposedName!, fieldsInRequestBody, isReplacementUpdate, isRequestBodyStrict))
                 {
                     unValidatedFields.Remove(exposedName!);
                 }
@@ -444,17 +430,20 @@ namespace Azure.DataApiBuilder.Core.Services
         /// are valid for the provided request body.
         /// </summary>
         /// <param name="column">The column to be verified.</param>
+        /// <param name="exposedName">Exposed name of the column.</param>
         /// <param name="fieldsInRequestBody">The fields in the request body.</param>
+        /// <param name="isReplacementUpdate">Indicates if the column is a replacement update.</param>
+        /// <param name="isRequestBodyStrict">Indicates if the runtime setting is request body strict.</param>
         /// <returns>true if the column is validated.</returns>
         private static bool ValidateColumn(ColumnDefinition column,
                                            string exposedName,
                                            IEnumerable<string> fieldsInRequestBody,
-                                           bool isReplacementUpdate)
+                                           bool isReplacementUpdate,
+                                           bool isRequestBodyStrict)
         {
             string message;
-            // Autogenerated values should never be present in a request body.
-            // TODO: Add a similar check for read-only fields.
-            if (column.IsAutoGenerated && fieldsInRequestBody.Contains(exposedName))
+            // Read-only fields should never be present in a request body, unless request-body-strict is false.
+            if (column.IsReadOnly && fieldsInRequestBody.Contains(exposedName) && isRequestBodyStrict)
             {
                 message = $"Invalid request body. Field not allowed in body: {exposedName}.";
             }

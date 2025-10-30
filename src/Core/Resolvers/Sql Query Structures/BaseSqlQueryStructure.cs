@@ -514,8 +514,8 @@ namespace Azure.DataApiBuilder.Core.Resolvers
 
             if (mutationParameters.TryGetValue(fieldName, out object? item))
             {
-                IObjectField fieldSchema = context.Selection.Field;
-                IInputField itemsArgumentSchema = fieldSchema.Arguments[fieldName];
+                ObjectField fieldSchema = context.Selection.Field;
+                IInputValueDefinition itemsArgumentSchema = fieldSchema.Arguments[fieldName];
                 InputObjectType itemsArgumentObject = ExecutionHelper.InputObjectTypeFromIInputField(itemsArgumentSchema);
 
                 // An inline argument was set
@@ -568,6 +568,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             }
 
             ODataASTVisitor visitor = new(this, MetadataProvider, operation);
+
             try
             {
                 DbPolicyPredicatesForOperations[operation] = GetFilterPredicatesFromOdataClause(dbPolicyClause, visitor);

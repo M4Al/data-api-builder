@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -103,19 +105,10 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLMutationTests
         /// <param name="dbQuery">SELECT query to validate expected result.</param>
         /// <param name="errorMessage">Expected error message.</param>
         /// <param name="roleName">Custom client role in whose context this authenticated request will be executed</param>
-        public async Task InsertMutationFailingDatabasePolicy(string dbQuery, string errorMessage, string roleName)
+        /// <param name="graphQLMutationPayload">graphql request payload</param>
+        public async Task InsertMutationFailingDatabasePolicy(string dbQuery, string errorMessage, string roleName, string graphQLMutationName, string graphQLMutationPayload)
         {
-            string graphQLMutationName = "createPublisher";
-            string graphQLMutation = @"
-                mutation {
-                    createPublisher(item: { name: ""New publisher"" }) {
-                        id
-                        name
-                    }
-                }
-            ";
-
-            JsonElement result = await ExecuteGraphQLRequestAsync(graphQLMutation, graphQLMutationName, clientRoleHeader: roleName, isAuthenticated: true);
+            JsonElement result = await ExecuteGraphQLRequestAsync(graphQLMutationPayload, graphQLMutationName, clientRoleHeader: roleName, isAuthenticated: true);
 
             SqlTestHelper.TestForErrorInGraphQLResponse(
                 result.ToString(),
@@ -128,6 +121,20 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLMutationTests
 
             // Assert that the create mutation fails to insert the record into the table and that the select query returns no result.
             Assert.AreEqual(dbResponseJson.RootElement.GetProperty("count").GetInt64(), 0);
+        }
+
+        /// <summary>
+        /// <code>Do: </code> Attempt to insert a new publisher with name allowed by database policy (@item.name ne 'New publisher')
+        /// <code>Check: </code> Mutation succeeds.
+        /// </summary>
+        public async Task InsertMutationWithDatabasePolicy(string dbQuery, string roleName, string graphQLMutationName, string graphQLMutationPayload)
+        {
+            await ExecuteGraphQLRequestAsync(graphQLMutationPayload, graphQLMutationName, clientRoleHeader: roleName, isAuthenticated: true);
+
+            string currentDbResponse = await GetDatabaseResultAsync(dbQuery);
+
+            JsonDocument currentResult = JsonDocument.Parse(currentDbResponse);
+            Assert.AreEqual(1, currentResult.RootElement.GetProperty("count").GetInt64());
         }
 
         /// <summary>
@@ -250,7 +257,7 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLMutationTests
 
             string currentDbResponse = await GetDatabaseResultAsync(dbQueryToVerifyDeletion);
             JsonDocument currentResult = JsonDocument.Parse(currentDbResponse);
-            Assert.AreEqual(currentResult.RootElement.GetProperty("maxId").GetInt64(), 14);
+            Assert.AreEqual(currentResult.RootElement.GetProperty("maxId").GetInt64(), 21);
             JsonElement graphQLResponse = await ExecuteGraphQLRequestAsync(graphQLMutation, graphQLMutationName, isAuthenticated: true);
 
             // Stored Procedure didn't return anything
@@ -259,7 +266,7 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLMutationTests
             // check to verify new element is inserted
             string updatedDbResponse = await GetDatabaseResultAsync(dbQueryToVerifyDeletion);
             JsonDocument updatedResult = JsonDocument.Parse(updatedDbResponse);
-            Assert.AreEqual(updatedResult.RootElement.GetProperty("maxId").GetInt64(), 13);
+            Assert.AreEqual(updatedResult.RootElement.GetProperty("maxId").GetInt64(), 20);
         }
 
         public async Task InsertMutationOnTableWithTriggerWithNonAutoGenPK(string dbQuery)
@@ -1109,6 +1116,34 @@ namespace Azure.DataApiBuilder.Service.Tests.SqlTests.GraphQLMutationTests
                 Assert.Fail("Unexpected failure. Atleast one of the delete mutations should've succeeded");
             }
 
+        }
+
+        /// <summary>
+        /// Performs create item on different Windows Regional format settings and validate that the data type Float is correct
+        /// </summary>
+        public async Task CanCreateItemWithCultureInvariant(string cultureInfo, string dbQuery)
+        {
+            CultureInfo ci = new(cultureInfo);
+            CultureInfo.DefaultThreadCurrentCulture = ci;
+
+            string graphQLMutationName = "createSales";
+            string graphQLMutation = @"
+                mutation {
+                    createSales (item: { item_name: ""test_name"", subtotal: 3.14, tax: 1.15 }) {
+                        id
+                        item_name
+                        subtotal
+                        tax
+                    }
+                }
+            ";
+
+            JsonElement response = await ExecuteGraphQLRequestAsync(graphQLMutation, graphQLMutationName, isAuthenticated: true);
+            string dbResponse = await GetDatabaseResultAsync(dbQuery);
+            using JsonDocument dbResponseJson = JsonDocument.Parse(dbResponse);
+
+            // Validate results
+            Assert.AreEqual(Convert.ToDouble(dbResponseJson.RootElement.GetProperty("subtotal").GetDouble(), CultureInfo.InvariantCulture), response.GetProperty("subtotal").GetDouble());
         }
 
         #endregion
