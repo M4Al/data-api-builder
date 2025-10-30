@@ -172,7 +172,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             _ctx = ctx;
             IsMultipleCreateOperation = isMultipleCreateOperation;
 
-            IObjectField schemaField = _ctx.Selection.Field;
+            ObjectField schemaField = _ctx.Selection.Field;
             FieldNode? queryField = _ctx.Selection.SyntaxNode;
 
             IOutputType outputType = schemaField.Type;
@@ -388,7 +388,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 IDictionary<string, object?> queryParams,
                 ISqlMetadataProvider sqlMetadataProvider,
                 IAuthorizationResolver authorizationResolver,
-                IObjectField schemaField,
+                ObjectField schemaField,
                 FieldNode? queryField,
                 IncrementingInteger counter,
                 RuntimeConfigProvider runtimeConfigProvider,
@@ -408,7 +408,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
 
             // extract the query argument schemas before switching schemaField to point to *Connetion.items
             // since the pagination arguments are not placed on the items, but on the pagination query
-            IFieldCollection<IInputField> queryArgumentSchemas = schemaField.Arguments;
+            ArgumentCollection queryArgumentSchemas = schemaField.Arguments;
 
             PaginationMetadata.IsPaginated = QueryBuilder.IsPaginationType(_underlyingFieldType);
 
@@ -459,7 +459,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             {
                 if (isGroupByQuery)
                 {
-                    ProcessGroupByField(queryField, ctx);
+                    ProcessGroupByField(queryField, ctx, authorizationResolver);
                 }
                 else
                 {
@@ -796,7 +796,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 }
                 else
                 {
-                    IObjectField? subschemaField = _underlyingFieldType.Fields[fieldName];
+                    ObjectField? subschemaField = _underlyingFieldType.Fields[fieldName];
 
                     if (_ctx == null)
                     {
@@ -877,11 +877,13 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         ///   }
         /// }
         /// </summary>
-        private void ProcessGroupByField(FieldNode groupByField, IMiddlewareContext ctx)
+        private void ProcessGroupByField(FieldNode groupByField, IMiddlewareContext ctx, IAuthorizationResolver authorizationResolver)
         {
             // Extract 'fields' argument
             ArgumentNode? fieldsArg = groupByField.Arguments.FirstOrDefault(a => a.Name.Value == QueryBuilder.GROUP_BY_FIELDS_FIELD_NAME);
             HashSet<string> fieldsInArgument = new();
+
+            string roleOfGraphQLRequest = Authorization.AuthorizationResolver.GetRoleOfGraphQLRequest(ctx);
 
             if (fieldsArg is { Value: ListValueNode fieldsList })
             {
@@ -889,6 +891,18 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 {
                     string fieldName = value.Value;
                     string columnName = MetadataProvider.TryGetBackingColumn(EntityName, fieldName, out string? backingColumn) ? backingColumn : fieldName;
+
+                    // Validate that the current role has access to groupBy argument fields
+                    IEnumerable<string> roles = authorizationResolver.GetRolesForField(EntityName, field: columnName, operation: EntityActionOperation.Read);
+                    if (roles != null && !roles.Contains(roleOfGraphQLRequest, StringComparer.OrdinalIgnoreCase))
+                    {
+                        // raising exception for the first unauthorized groupBy field found
+                        throw new DataApiBuilderException(
+                            message: string.Format(DataApiBuilderException.GRAPHQL_GROUPBY_FIELD_AUTHZ_FAILURE, fieldName),
+                            statusCode: HttpStatusCode.Forbidden,
+                            subStatusCode: DataApiBuilderException.SubStatusCodes.AuthorizationCheckFailed
+                        );
+                    }
 
                     GroupByMetadata.Fields[columnName] = new Column(DatabaseObject.SchemaName, DatabaseObject.Name, columnName, SourceAlias);
                     AddColumn(fieldName, backingColumn ?? fieldName);
@@ -913,7 +927,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
 
                     case QueryBuilder.GROUP_BY_AGGREGATE_FIELD_NAME:
                         GroupByMetadata.RequestedAggregations = true;
-                        ProcessAggregations(field, ctx);
+                        ProcessAggregations(field, ctx, authorizationResolver, roleOfGraphQLRequest);
                         break;
                 }
             }
@@ -963,7 +977,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         /// </summary>
         /// <param name="aggregationsField">The FieldNode representing the aggregations field in the GraphQL query.</param>
         /// <param name="ctx"> middleware context.</param>
-        private void ProcessAggregations(FieldNode aggregationsField, IMiddlewareContext ctx)
+        private void ProcessAggregations(FieldNode aggregationsField, IMiddlewareContext ctx, IAuthorizationResolver authorizationResolver, string roleOfGraphQLRequest)
         {
             // If there are no selections in the aggregation field, exit early
             if (aggregationsField.SelectionSet == null)
@@ -972,14 +986,14 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             }
 
             // Retrieve the schema field from the GraphQL context
-            IObjectField schemaField = ctx.Selection.Field;
+            ObjectField schemaField = ctx.Selection.Field;
 
             // Get the 'group by' field from the schema's entity type
-            IObjectField groupByField = schemaField.Type.NamedType<ObjectType>()
+            ObjectField groupByField = schemaField.Type.NamedType<ObjectType>()
                 .Fields[QueryBuilder.GROUP_BY_FIELD_NAME];
 
             // Get the 'aggregations' field from the 'group by' entity type
-            IObjectField aggregationsObjectField = groupByField.Type.NamedType<ObjectType>()
+            ObjectField aggregationsObjectField = groupByField.Type.NamedType<ObjectType>()
                 .Fields[QueryBuilder.GROUP_BY_AGGREGATE_FIELD_NAME];
 
             // Iterate through each selection in the aggregation field
@@ -1010,7 +1024,18 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     if (MetadataProvider.TryGetBackingColumn(EntityName, fieldName, out string? backingColumn))
                     {
                         columnName = backingColumn;
-                        fieldName = backingColumn;
+                    }
+
+                    // Validate that the current role has access to field in the aggregation function argument
+                    IEnumerable<string> roles = authorizationResolver.GetRolesForField(EntityName, field: columnName, operation: EntityActionOperation.Read);
+                    if (roles != null && !roles.Contains(roleOfGraphQLRequest, StringComparer.OrdinalIgnoreCase))
+                    {
+                        // raising exception for the first unauthorized field found
+                        throw new DataApiBuilderException(
+                            message: string.Format(DataApiBuilderException.GRAPHQL_AGGREGATION_FIELD_AUTHZ_FAILURE, fieldName, operation),
+                            statusCode: HttpStatusCode.Forbidden,
+                            subStatusCode: DataApiBuilderException.SubStatusCodes.AuthorizationCheckFailed
+                        );
                     }
 
                     // Use the field alias if provided, otherwise default to the operation name
@@ -1039,7 +1064,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                         List<ObjectFieldNode> filterFields = (List<ObjectFieldNode>)havingArg.Value.Value!;
 
                         // Retrieve the corresponding aggregation operation field from the schema
-                        IObjectField operationObjectField = aggregationsObjectField.Type.NamedType<ObjectType>()
+                        ObjectField operationObjectField = aggregationsObjectField.Type.NamedType<ObjectType>()
                             .Fields[operation.ToString()];
 
                         // Parse the filtering conditions and apply them to the aggregation
@@ -1080,7 +1105,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         /// so we find their backing column names before creating the orderBy list.
         /// All the remaining primary key columns are also added to ensure there are no tie breaks.
         /// </summary>
-        private List<OrderByColumn> ProcessGqlOrderByArg(List<ObjectFieldNode> orderByFields, IInputField orderByArgumentSchema, bool isGroupByQuery = false)
+        private List<OrderByColumn> ProcessGqlOrderByArg(List<ObjectFieldNode> orderByFields, IInputValueDefinition orderByArgumentSchema, bool isGroupByQuery = false)
         {
             if (_ctx is null)
             {

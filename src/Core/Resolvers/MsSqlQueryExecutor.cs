@@ -44,7 +44,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         public override IDictionary<string, DbConnectionStringBuilder> ConnectionStringBuilders
             => base.ConnectionStringBuilders;
 
-        public DefaultAzureCredential AzureCredential { get; set; } = new();
+        public DefaultAzureCredential AzureCredential { get; set; } = new();  // CodeQL [SM05137] DefaultAzureCredential will use Managed Identity if available or fallback to default.
 
         /// <summary>
         /// The saved cached access token obtained from DefaultAzureCredentials
@@ -284,7 +284,7 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 string paramName = $"{SESSION_PARAM_NAME}{counter.Next()}";
                 parameters.Add(paramName, new(claimValue));
                 // Append statement to set read only param value - can be set only once for a connection.
-                string statementToSetReadOnlyParam = "EXEC sp_set_session_context " + $"'{claimType}', " + paramName + ", @read_only = 1;";
+                string statementToSetReadOnlyParam = "EXEC sp_set_session_context " + $"'{claimType}', " + paramName + ", @read_only = 0;";
                 sessionMapQuery = sessionMapQuery.Append(statementToSetReadOnlyParam);
             }
 
