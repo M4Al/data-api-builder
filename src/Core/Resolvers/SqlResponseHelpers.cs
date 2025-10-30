@@ -131,8 +131,11 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     queryString: queryString,
                     isNextLinkRelative: runtimeConfig.NextLinkRelative());
 
-            //Get the element RecordCount from the first element of the array
-            //JsonElement recordCountElement = rootEnumerated[0].GetProperty("RecordCount");
+                rootEnumerated.Add(nextLink);
+            }
+
+                //Get the element RecordCount from the first element of the array
+                //JsonElement recordCountElement = rootEnumerated[0].GetProperty("RecordCount");
             string jsonRecordCount = JsonSerializer.Serialize(new[]
             {
                 new
@@ -141,13 +144,6 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 }
             });
 
-            // When there are extra fields present, they are removed before returning the response.
-            if (extraFieldsInResponse.Count > 0)
-            {
-                rootEnumerated = RemoveExtraFieldsInResponseWithMultipleItems(rootEnumerated, extraFieldsInResponse);
-            }
-
-            rootEnumerated.Add(nextLink);
             rootEnumerated.Add(JsonSerializer.Deserialize<JsonElement>(jsonRecordCount));
             return OkResponse(JsonSerializer.SerializeToElement(rootEnumerated));
         }

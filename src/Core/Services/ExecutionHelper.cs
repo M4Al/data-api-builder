@@ -20,7 +20,6 @@ using HotChocolate.Execution;
 using HotChocolate.Execution.Processing;
 using HotChocolate.Language;
 using HotChocolate.Resolvers;
-using HotChocolate.Types.Descriptors.Definitions;
 using NodaTime.Text;
 using Kestral = Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpMethod;
 
@@ -427,10 +426,10 @@ namespace Azure.DataApiBuilder.Service.Services
             // CNEXT: This is a nasty exernal dependancy
             // Add one extra allowable parameter to schemaArgument: offset
 
-            InputFieldDefinition offsetDef = new("offset", "Offset for the query", null, null, null);
-            IInputField offS = new InputField(offsetDef, 5);
+            //HotChocolate.Types.InputFieldDefinition offsetDef = new("offset", "Offset for the query", null, null, null);
+            //IInputField offS = new InputField(offsetDef, 5);
 
-            IEnumerable<IInputField> ss = schemaArguments.Append<IInputField>(offS);
+            //IEnumerable<IInputField> ss = schemaArguments.Append<IInputField>(offS);
 
             //IInputField i = new InputField("offset", new IntType())
 
@@ -442,7 +441,7 @@ namespace Azure.DataApiBuilder.Service.Services
             // {orderBy:entityOrderByInput}
             // The values in schemaArguments will have default values when the backing
             // entity is a stored procedure with runtime config defined default parameter values.
-            foreach (IInputField argument in ss)
+            foreach (IInputValueDefinition argument in schemaArguments)
             {
                 if (argument.DefaultValue != null)
                 {
@@ -454,6 +453,10 @@ namespace Azure.DataApiBuilder.Service.Services
                             variables: variables));
                 }
             }
+
+            collectedParameters.Add(
+                "offset",
+                0);
 
             // Overwrite the default values with the passed in arguments
             // Example: { myEntity(first: $first, orderBy: {entityField: ASC) { items { entityField } } }
