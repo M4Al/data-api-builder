@@ -423,7 +423,7 @@ namespace Azure.DataApiBuilder.Service.Services
             // Fill the parameters dictionary with the default argument values
             ArgumentCollection schemaArguments = schema.Arguments;
 
-            // Example 'argumentSchemas' IInputValueDefinition objects of type 'HotChocolate.Types.Argument':
+            // Example 'argumentSchemas' IInputField objects of type 'HotChocolate.Types.Argument':
             // These are all default arguments defined in the schema for queries.
             // {first:int}
             // {after:String}
@@ -443,7 +443,7 @@ namespace Azure.DataApiBuilder.Service.Services
                             variables: variables));
                 }
             }
-
+           
             // Overwrite the default values with the passed in arguments
             // Example: { myEntity(first: $first, orderBy: {entityField: ASC) { items { entityField } } }
             // User supplied $first filter variable overwrites the default value of 'first'.

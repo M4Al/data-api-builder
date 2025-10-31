@@ -143,6 +143,13 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         /// </summary>
         protected virtual string Build(Column column)
         {
+            // If the table is a subQUery, we return some fancy JSON_VALUE
+            
+            if(column.TableAlias != null && column.TableAlias.Contains("_subq") && column is OrderByColumn)
+            {
+                return $"JSON_VALUE({QuoteIdentifier(column.TableAlias)}.[data], '$.{column.ColumnName}')";
+            }
+            
             // If the table alias is not empty, we return [{SourceAlias}].[{Column}]
             if (!string.IsNullOrEmpty(column.TableAlias))
             {

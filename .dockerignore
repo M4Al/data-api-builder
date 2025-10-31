@@ -1,0 +1,19 @@
+# Exclude repo metadata and local build outputs from Docker context
+.git/
+.vs/
+.vscode/
+TestResults/
+
+# Dotnet build artifacts
+**/bin/
+**/obj/
+**/out/
+
+# IDE and tooling miscellany
+*.user
+*.suo
+*.swp
+.DS_Store
+
+# Local docker artifacts
+Dockerfile.*.local
