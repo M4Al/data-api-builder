@@ -2,7 +2,7 @@
   "$schema": "https://github.com/Azure/data-api-builder/releases/latest/download/dab.draft.schema.json",
   "data-source": {
     "database-type": "mssql",
-    "connection-string": "Data Source=nqf4kgvoqm4ufazdzriupb2pay-hmnbvxar2mgu7e3ng27fsqy3we.database.fabric.microsoft.com,1433;User ID=8bfaf0d6-fa20-4ed5-a450-0005ceb77729;Password=z5y8Q~hLcfdAflVrfnYoVxdavIJXZb5tlH~tAbRn;Pooling=True;Min Pool Size=0;Max Pool Size=100;Multiple Active Result Sets=False;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;Authentication=ActiveDirectoryServicePrincipal;Initial Catalog=apiLayer-345587c4-1232-457e-9761-b6bca3d72e2e",
+    "connection-string": "Data Source=nqf4kgvoqm4ufazdzriupb2pay-hmnbvxar2mgu7e3ng27fsqy3we.database.fabric.microsoft.com,1433;User ID=8bfaf0d6-fa20-4ed5-a450-0005ceb77729;Password=z5y8Q~hLcfdAflVrfnYoVxdavIJXZb5tlH~tAbRn;Pooling=True;Min Pool Size=0;Max Pool Size=100;Multiple Active Result Sets=False;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;Authentication=ActiveDirectoryServicePrincipal;Initial Catalog=apiLayer-345587c4-1232-457e-9761-b6bca3d72e2e; Command Timeout=60",
     "options": {
       "set-session-context": true
     }
@@ -3292,6 +3292,70 @@
       "cache": {
         "enabled": true,
         "ttl-seconds": 120
+      }
+    },
+    "OperationalUnitOfMeasure": {
+      "source": {
+        "object": "silver_ops.OperationalUnitOfMeasure",
+        "type": "table",
+        "key-fields": [
+          "Code"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "OperationalUnitOfMeasure",
+          "plural": "OperationalUnitsOfMeasure"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            {
+              "action": "read"
+            }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 600
+      }
+    },
+    "ContainerType": {
+      "source": {
+        "object": "silver_ops.ContainerType",
+        "type": "table",
+        "key-fields": [
+          "ISOCode"
+        ]
+      },
+      "graphql": {
+        "enabled": true,
+        "type": {
+          "singular": "ContainerType",
+          "plural": "ContainerTypes"
+        }
+      },
+      "rest": {
+        "enabled": true
+      },
+      "permissions": [
+        {
+          "role": "anonymous",
+          "actions": [
+            { "action": "read" }
+          ]
+        }
+      ],
+      "cache": {
+        "enabled": true,
+        "ttl-seconds": 600
       }
     }
   }

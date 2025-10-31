@@ -423,15 +423,6 @@ namespace Azure.DataApiBuilder.Service.Services
             // Fill the parameters dictionary with the default argument values
             ArgumentCollection schemaArguments = schema.Arguments;
 
-            // CNEXT: This is a nasty exernal dependancy
-            // Add one extra allowable parameter to schemaArgument: offset
-
-            //HotChocolate.Types.InputFieldDefinition offsetDef = new("offset", "Offset for the query", null, null, null);
-            //IInputField offS = new InputField(offsetDef, 5);
-
-            //IEnumerable<IInputField> ss = schemaArguments.Append<IInputField>(offS);
-
-            //IInputField i = new InputField("offset", new IntType())
 
             // Example 'argumentSchemas' IInputField objects of type 'HotChocolate.Types.Argument':
             // These are all default arguments defined in the schema for queries.
@@ -453,11 +444,7 @@ namespace Azure.DataApiBuilder.Service.Services
                             variables: variables));
                 }
             }
-
-            collectedParameters.Add(
-                "offset",
-                0);
-
+           
             // Overwrite the default values with the passed in arguments
             // Example: { myEntity(first: $first, orderBy: {entityField: ASC) { items { entityField } } }
             // User supplied $first filter variable overwrites the default value of 'first'.

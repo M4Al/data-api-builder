@@ -508,7 +508,6 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 }
                 else
                 {
-                    // if first is not passed, we should use the default page size.
                     _offset = 0;
                 }
             }
