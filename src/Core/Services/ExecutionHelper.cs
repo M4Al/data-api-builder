@@ -423,7 +423,6 @@ namespace Azure.DataApiBuilder.Service.Services
             // Fill the parameters dictionary with the default argument values
             ArgumentCollection schemaArguments = schema.Arguments;
 
-
             // Example 'argumentSchemas' IInputField objects of type 'HotChocolate.Types.Argument':
             // These are all default arguments defined in the schema for queries.
             // {first:int}
