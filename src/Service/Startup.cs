@@ -378,6 +378,12 @@ namespace Azure.DataApiBuilder.Service
             services.AddSingleton<IAuthorizationResolver, AuthorizationResolver>();
             services.AddSingleton<IOpenApiDocumentor, OpenApiDocumentor>();
 
+            services.AddHttpLogging(logging =>
+            {
+                logging.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestBody;
+                logging.ResponseBodyLogLimit = 9999999;
+            });
+
             AddGraphQLService(services, runtimeConfig?.Runtime?.GraphQL);
 
             // Subscribe the GraphQL schema refresh method to the specific hot-reload event
@@ -489,7 +495,14 @@ namespace Azure.DataApiBuilder.Service
                 .AddTypeConverter<LocalTime, TimeOnly>(
                     from => new TimeOnly(from.Hour, from.Minute, from.Second, from.Millisecond))
                 .AddTypeConverter<TimeOnly, LocalTime>(
-                    from => new LocalTime(from.Hour, from.Minute, from.Second, from.Millisecond));
+                    from => new LocalTime(from.Hour, from.Minute, from.Second, from.Millisecond))
+                .ModifyCostOptions(options =>
+                {
+                    options.MaxFieldCost = 10000;
+                    options.MaxTypeCost = 10000;
+                    options.EnforceCostLimits = false;
+                    options.ApplyCostDefaults = false;
+                });
 
             // Conditionally adds a maximum depth rule to the GraphQL queries/mutation selection set.
             // This rule is only added if a positive depth limit is specified, ensuring that the server
@@ -608,6 +621,7 @@ namespace Azure.DataApiBuilder.Service
             // https://andrewlock.net/understanding-pathbase-in-aspnetcore/#placing-usepathbase-in-the-correct-location
             app.UseCorrelationIdMiddleware();
             app.UsePathRewriteMiddleware();
+            app.UseHttpLogging();
 
             // SwaggerUI visualization of the OpenAPI description document is only available
             // in developer mode in alignment with the restriction placed on ChilliCream's BananaCakePop IDE.

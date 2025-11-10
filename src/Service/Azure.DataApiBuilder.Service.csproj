@@ -45,7 +45,6 @@
 
     <ItemGroup>
         <Watch Remove="dab-config.CosmosDb_NoSql.json" />
-        <Watch Remove="dab-config.json" />
         <Watch Remove="dab-config.MsSql.json" />
         <Watch Remove="dab-config.MySql.json" />
         <Watch Remove="dab-config.PostgreSql.json" />
@@ -105,6 +104,9 @@
     <ProjectReference Include="..\Azure.DataApiBuilder.Mcp\Azure.DataApiBuilder.Mcp.csproj" />
     <ProjectReference Include="..\Core\Azure.DataApiBuilder.Core.csproj" />
   </ItemGroup>
+
+
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
     <ItemGroup>
         <None Remove="dab.draft.schema.json" />

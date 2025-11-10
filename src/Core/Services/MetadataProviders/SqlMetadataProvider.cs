@@ -102,6 +102,16 @@ namespace Azure.DataApiBuilder.Core.Services
             }
         }
 
+        public bool TryGetEntityDefenition(string entityName, out Entity? entityDefenition)
+        {
+            if (!_entities.TryGetValue(entityName, out entityDefenition))
+            {
+                throw new KeyNotFoundException($"Initialization of metadata incomplete for entity: {entityName}");
+            }
+
+            return true;
+        }
+
         public SqlMetadataProvider(
             RuntimeConfigProvider runtimeConfigProvider,
             IAbstractQueryManagerFactory engineFactory,
@@ -162,6 +172,7 @@ namespace Azure.DataApiBuilder.Core.Services
         {
             if (!EntityToDatabaseObject.TryGetValue(entityName, out DatabaseObject? databaseObject))
             {
+                Environment.Exit(-777);
                 throw new DataApiBuilderException(message: $"Table Definition for {entityName} has not been inferred.",
                     statusCode: HttpStatusCode.InternalServerError,
                     subStatusCode: DataApiBuilderException.SubStatusCodes.EntityNotFound);
@@ -180,6 +191,7 @@ namespace Azure.DataApiBuilder.Core.Services
         {
             if (!EntityToDatabaseObject.TryGetValue(entityName, out DatabaseObject? databaseObject))
             {
+                Environment.Exit(-777);
                 throw new DataApiBuilderException(message: $"Table Definition for {entityName} has not been inferred.",
                     statusCode: HttpStatusCode.InternalServerError,
                     subStatusCode: DataApiBuilderException.SubStatusCodes.EntityNotFound);
@@ -193,6 +205,7 @@ namespace Azure.DataApiBuilder.Core.Services
         {
             if (!EntityToDatabaseObject.TryGetValue(entityName, out DatabaseObject? databaseObject))
             {
+                Environment.Exit(-777);
                 throw new DataApiBuilderException(message: $"Table Definition for {entityName} has not been inferred.",
                     statusCode: HttpStatusCode.InternalServerError,
                     subStatusCode: DataApiBuilderException.SubStatusCodes.EntityNotFound);

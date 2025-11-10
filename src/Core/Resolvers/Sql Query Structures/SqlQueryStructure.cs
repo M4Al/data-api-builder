@@ -3,6 +3,7 @@
 
 using System.Data;
 using System.Net;
+using System.Text.RegularExpressions;
 using Azure.DataApiBuilder.Auth;
 using Azure.DataApiBuilder.Config.ObjectModel;
 using Azure.DataApiBuilder.Core.Configurations;
@@ -63,6 +64,8 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         /// The maximum number of results this query should return.
         /// </summary>
         private uint? _limit = PaginationOptions.DEFAULT_PAGE_SIZE;
+
+        private int? _offset;
 
         /// <summary>
         /// If this query is built because of a GraphQL query (as opposed to
@@ -488,11 +491,24 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                     // parse first parameter for all list queries
                     object? firstObject = queryParams[QueryBuilder.PAGE_START_ARGUMENT_NAME];
                     _limit = runtimeConfig?.GetPaginationLimit((int?)firstObject);
+
                 }
                 else
                 {
                     // if first is not passed, we should use the default page size.
                     _limit = runtimeConfig?.DefaultPageSize();
+                }
+
+                if (queryParams.ContainsKey(QueryBuilder.OFFSET_FIELD_NAME))
+                {
+                    // parse the offset parameter for all list queries
+                    object? offsetObject = queryParams[QueryBuilder.OFFSET_FIELD_NAME];
+                    _offset = (int?)offsetObject;
+
+                }
+                else
+                {
+                    _offset = 0;
                 }
             }
 
@@ -713,6 +729,9 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                         break;
                     case QueryBuilder.HAS_NEXT_PAGE_FIELD_NAME:
                         PaginationMetadata.RequestedHasNextPage = true;
+                        break;
+                    case QueryBuilder.TOTAL_COUNT_FIELD_NAME:
+                        PaginationMetadata.RequestedTotalCount = true;
                         break;
                     case QueryBuilder.GROUP_BY_FIELD_NAME:
                         PaginationMetadata.RequestedGroupBy = true;
@@ -1099,6 +1118,50 @@ namespace Azure.DataApiBuilder.Core.Resolvers
             }
         }
 
+        public int? Offset()
+        {
+            // Check if the offset argument is present in the query, if not, return 0
+            try
+            {
+                //return this._ctx?.ArgumentValue<uint?>("offset") ?? 0;
+                return _offset;
+            }
+            catch (HotChocolate.GraphQLException)
+            {
+                return 0; // This is a stop-gat and indicated a very fishy situation
+            }
+        }
+
+        private static string ExtractColumnName(string fieldValue)
+        {
+            string pattern = @"\{\s*([^:]+)\s*:";
+            Match match = Regex.Match(fieldValue, pattern);
+            if (match.Success)
+            {
+                string columnName = match.Groups[1].Value.Trim();
+                return columnName;
+            }
+            else
+            {
+                return "";
+            }
+        }
+
+        private static string ExtractValue(string fieldValue)
+        {
+            string pattern = @"\{\s*([^:]+)\s*:\s*(.*?)\s*\}";
+            Match match = Regex.Match(fieldValue, pattern);
+            if (match.Success)
+            {
+                string value = match.Groups[2].Value.Trim();
+                return value;
+            }
+            else
+            {
+                return "";
+            }
+        }
+
         /// <summary>
         /// Create a list of orderBy columns from the orderBy argument
         /// passed to the gql query. The orderBy argument could contain mapped field names
@@ -1134,6 +1197,38 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 }
 
                 string fieldName = field.Name.ToString();
+
+                // Let's check if we're trying to sort on a child object. If tgis is a 'one' relationship this will just work
+                if (field.Value.ToString().Contains(':'))
+                {
+                    // Check if the fieldName is a relationship element
+                    if (MetadataProvider.TryGetEntityDefenition(EntityName, out Entity? baseEntity))
+                    {
+                        if (baseEntity!.Relationships!.ContainsKey(fieldName))
+                        {
+                            // Look up out alias in the JoinQueries
+                            //myJoin = this.JoinQueries;
+                            //stuff
+                            Column? linkColumn = FindColumnByLabel(fieldName);
+                            if (linkColumn == null)
+                            {
+                                throw new DataApiBuilderException(message: "Unable to resolve relation " + fieldName,
+                                    statusCode: HttpStatusCode.InternalServerError,
+                                    subStatusCode: DataApiBuilderException.SubStatusCodes.UnexpectedError);
+                            }
+
+                            orderByColumnsList.Add(new OrderByColumn(tableSchema: linkColumn.TableSchema,
+                                                         tableName: linkColumn.TableName,
+                                                         columnName: ExtractColumnName(field.Value.ToString()),
+                                                         tableAlias: linkColumn.TableAlias,
+                                                         direction: Enum.Parse<OrderBy>(ExtractValue(field.Value.ToString()))
+                                ));
+
+                        }
+                    }
+
+                    continue;
+                }
 
                 if (!MetadataProvider.TryGetBackingColumn(EntityName, fieldName, out string? backingColumnName))
                 {
@@ -1244,6 +1339,11 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         public bool IsSubqueryColumn(Column column)
         {
             return column.TableAlias == null ? false : JoinQueries.ContainsKey(column.TableAlias);
+        }
+
+        public LabelledColumn? FindColumnByLabel(string fieldName)
+        {
+            return Columns.FirstOrDefault(column => column.Label.Equals(fieldName, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>

@@ -32,6 +32,8 @@ namespace Azure.DataApiBuilder.Core.Resolvers
         /// <inheritdoc />
         public string Build(SqlQueryStructure structure)
         {
+            StringBuilder query = new();
+
             string dataIdent = QuoteIdentifier(SqlQueryStructure.DATA_IDENT);
             string fromSql = $"{QuoteIdentifier(structure.DatabaseObject.SchemaName)}.{QuoteIdentifier(structure.DatabaseObject.Name)} " +
                              $"AS {QuoteIdentifier($"{structure.SourceAlias}")}{Build(structure.Joins)}";
@@ -45,16 +47,47 @@ namespace Azure.DataApiBuilder.Core.Resolvers
 
             string aggregations = BuildAggregationColumns(structure);
 
-            StringBuilder query = new();
+            //Add recordcount if needed
+            if (structure.IsListQuery)
+            {
+                StringBuilder recordCountSql = new();
 
-            query.Append($"SELECT TOP {structure.Limit()} {WrappedColumns(structure)} {aggregations}")
-                .Append($" FROM {fromSql}")
-                .Append($" WHERE {predicates}")
-                .Append(BuildGroupBy(structure))
-                .Append(BuildHaving(structure))
-                .Append(BuildOrderBy(structure))
-                .Append(BuildJsonPath(structure));
+                recordCountSql.Append($"SELECT cast(count(1) as int) as RecordCount ")
+                    .Append($" FROM {fromSql}")
+                    .Append($" WHERE {predicates}")
+                    .Append(BuildGroupBy(structure))
+                    .Append(BuildHaving(structure));
+                  
+                fromSql += $" OUTER APPLY ({recordCountSql.ToString()}) RecordCountQuery";
 
+                query.Append ($"SELECT {WrappedColumns(structure)} {aggregations}, RecordCountQuery.RecordCount")
+                    .Append($" FROM {fromSql}")
+                    .Append($" WHERE {predicates}")
+                    .Append(BuildGroupBy(structure))
+                    .Append(BuildHaving(structure))
+                    .Append(BuildOrderBy(structure))
+                    .Append($" OFFSET {structure.Offset()} ROWS FETCH NEXT {structure.Limit()} ROWS ONLY")
+                    .Append(BuildJsonPath(structure));
+            } else
+            {
+                query.Append ($"SELECT {WrappedColumns(structure)} {aggregations}")
+                    .Append($" FROM {fromSql}")
+                    .Append($" WHERE {predicates}")
+                    .Append(BuildGroupBy(structure))
+                    .Append(BuildHaving(structure))
+                    .Append(BuildOrderBy(structure))
+                    .Append(BuildJsonPath(structure));
+            }
+
+            /*
+                query.Append($" FROM {fromSql}")
+                    .Append($" WHERE {predicates}")
+                    .Append(BuildGroupBy(structure))
+                    .Append(BuildHaving(structure)) 
+                    .Append(BuildOrderBy(structure))
+                    .Append(" OFFSET {structure.Offset()} ROWS FETCH NEXT {structure.Limit()} ROWS ONLY")
+                    .Append(BuildJsonPath(structure));
+            */
             return query.ToString();
         }
 

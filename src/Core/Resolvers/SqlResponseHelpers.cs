@@ -53,6 +53,13 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                                                   ? DetermineExtraFieldsInResponse(findOperationResponse, context.FieldsToBeReturned)
                                                   : DetermineExtraFieldsInResponse(findOperationResponse.EnumerateArray().First(), context.FieldsToBeReturned);
 
+            //Remove RecordCOunt from extraFieldsInResponse if present
+            /*
+            if (extraFieldsInResponse.Contains("RecordCount"))
+            {
+                extraFieldsInResponse.Remove("RecordCount");
+            }
+            */
             uint defaultPageSize = runtimeConfig.DefaultPageSize();
             uint maxPageSize = runtimeConfig.MaxPageSize();
 
@@ -127,7 +134,18 @@ namespace Azure.DataApiBuilder.Core.Resolvers
                 rootEnumerated.Add(nextLink);
             }
 
-            return OkResponse(JsonSerializer.SerializeToElement(rootEnumerated), isMcpRequest);
+                //Get the element RecordCount from the first element of the array
+                //JsonElement recordCountElement = rootEnumerated[0].GetProperty("RecordCount");
+            string jsonRecordCount = JsonSerializer.Serialize(new[]
+            {
+                new
+                {
+                    recordCount = @$"{rootEnumerated[0].GetProperty("RecordCount")}"
+                }
+            });
+
+            rootEnumerated.Add(JsonSerializer.Deserialize<JsonElement>(jsonRecordCount));
+            return OkResponse(JsonSerializer.SerializeToElement(rootEnumerated));
         }
 
         /// <summary>
