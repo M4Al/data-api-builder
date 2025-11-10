@@ -24,7 +24,7 @@ namespace Azure.DataApiBuilder.Service.GraphQLBuilder.Queries
         {
             List<InputValueDefinitionNode> inputFields = GenerateFilterInputFieldsForBuiltInFields(node, inputTypes);
             string filterInputName = GenerateObjectInputFilterName(node);
-            GenerateFilterInputTypeFromInputFields(inputTypes, inputFields, filterInputName, $"Filter input for {node.Name} GraphQL type");
+            GenerateInputTypeFromInputFields(inputTypes, inputFields, filterInputName, $"Filter input for {node.Name} GraphQL type");
         }
 
         internal static void GenerateOrderByInputTypeForObjectType(ObjectTypeDefinitionNode node, IDictionary<string, InputObjectTypeDefinitionNode> inputTypes)
@@ -32,7 +32,10 @@ namespace Azure.DataApiBuilder.Service.GraphQLBuilder.Queries
             List<InputValueDefinitionNode> inputFields = GenerateOrderByInputFieldsForBuiltInFields(node);
             string orderByInputName = GenerateObjectInputOrderByName(node);
 
+            GenerateInputTypeFromInputFields(inputTypes, inputFields, orderByInputName, $"Order by input for {node.Name} GraphQL type");
+
             // OrderBy does not include "and" and "or" input types so we add only the orderByInputName here.
+            /*
             inputTypes.Add(
                 orderByInputName,
                 new(
@@ -43,6 +46,7 @@ namespace Azure.DataApiBuilder.Service.GraphQLBuilder.Queries
                     inputFields
                     )
                 );
+            */
         }
 
         private static List<InputValueDefinitionNode> GenerateOrderByInputFieldsForBuiltInFields(ObjectTypeDefinitionNode node)
@@ -62,12 +66,26 @@ namespace Azure.DataApiBuilder.Service.GraphQLBuilder.Queries
                             new List<DirectiveNode>())
                         );
                 }
+                else if (RelationshipDirectiveType.Cardinality(field) == Config.ObjectModel.Cardinality.One)
+                {
+                    string targetEntityName = RelationshipDirectiveType.Target(field);
+
+                    inputFields.Add(
+                        new(
+                            location: null,
+                            field.Name,
+                            new StringValueNode($"Order by options for {field.Name}"),
+                            new NamedTypeNode(GenerateObjectInputOrderByName(targetEntityName)),
+                            defaultValue: null,
+                            new List<DirectiveNode>())
+                        );
+                }
             }
 
             return inputFields;
         }
 
-        private static void GenerateFilterInputTypeFromInputFields(
+        private static void GenerateInputTypeFromInputFields(
             IDictionary<string, InputObjectTypeDefinitionNode> inputTypes,
             List<InputValueDefinitionNode> inputFields,
             string inputTypeName,
